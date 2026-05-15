@@ -7,4 +7,4 @@ class CategoriaUnitOfWork(UnitOfWork):
     def __init__(self, session: Session):
         super().__init__(session)
         self.categorias = CategoriaRepository(session)
-        #self.productos = ProductoRepository(session)
+        

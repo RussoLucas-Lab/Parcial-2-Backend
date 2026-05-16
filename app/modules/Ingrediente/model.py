@@ -1,10 +1,10 @@
 from sqlmodel import Field, Relationship
 from app.Core.base import Base
 from typing import TYPE_CHECKING, Optional, List
-from app.Producto.model import ProductoIngrediente
+from app.modules.Producto.model import ProductoIngrediente
 
 if TYPE_CHECKING:
-    from app.Producto.model import Producto
+    from app.modules.Producto.model import Producto
 
 class Ingrediente(Base, table= True):
     

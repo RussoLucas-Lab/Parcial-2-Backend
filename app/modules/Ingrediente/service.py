@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from app.Ingrediente.schemas import IngredienteCreate, IngredienteList, IngredientePublic, IngredienteUpdate
-from app.Ingrediente.unit_of_work import IngredienteUnitOfWork
-from app.Ingrediente.model import Ingrediente
+from app.modules.Ingrediente.schemas import IngredienteCreate, IngredienteList, IngredientePublic, IngredienteUpdate
+from app.modules.Ingrediente.unit_of_work import IngredienteUnitOfWork
+from app.modules.Ingrediente.model import Ingrediente
 
 class IngredienteService:
     

@@ -1,6 +1,6 @@
 from sqlmodel import Session, select, text
 
-from app.Categoria.model import Categoria
+from app.modules.Categoria.model import Categoria
 from app.Core.repository import BaseRepository
 
 

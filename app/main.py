@@ -10,13 +10,13 @@ from app.Core.database import engine
 # IMPORTS DE TODOS LOS MODELOS
 # =========================================
 
-from app.Categoria.model import Categoria
-from app.Ingrediente.model import Ingrediente
+from app.modules.Categoria.model import Categoria
+from app.modules.Ingrediente.model import Ingrediente
 
-from app.Producto.model import (
-    Producto,
-    ProductoIngrediente,
-    ProductoCategoria
+from app.modules.Producto.model import (
+   Producto,
+   ProductoIngrediente,
+   ProductoCategoria
 )
 
 from app.modules.Usuario.model import Usuario
@@ -42,11 +42,12 @@ from app.modules.FormaPago.model import FormaPago
 # ROUTERS
 # =========================================
 
-from app.Ingrediente.router import router as ingrediente_router
-from app.Categoria.router import router as categoria_router
-from app.Producto.router import router as producto_router
+from app.modules.Ingrediente.router import router as ingrediente_router
+from app.modules.Categoria.router import router as categoria_router
+from app.modules.Producto.router import router as producto_router
 from app.modules.DireccionEntrega.router import router as direccion_entrega_router
 from app.modules.Auth.router import router as auth_router
+from app.modules.Usuario.router import router as usuario_router
 
 
 # =========================================
@@ -54,14 +55,14 @@ from app.modules.Auth.router import router as auth_router
 # =========================================
 
 from app.db.seed import (
-    seed_estados_pedido,
-    seed_formas_pago,
-    seed_roles
+   seed_estados_pedido,
+   seed_formas_pago,
+   seed_roles
 )
 
 
 app = FastAPI(
-    title="Primer Parcial Backend"
+   title="Segundo Parcial Backend"
 )
 
 
@@ -70,10 +71,11 @@ app = FastAPI(
 # =========================================
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+   CORSMiddleware,
+   allow_origins=["http://localhost:5173"],
+   allow_credentials=True,
+   allow_methods=["*"],
+   allow_headers=["*"],
 )
 
 
@@ -84,12 +86,12 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
 
-    SQLModel.metadata.create_all(engine)
+   SQLModel.metadata.create_all(engine)
 
-    with Session(engine) as session:
-        seed_roles(session)
-        seed_estados_pedido(session)
-        seed_formas_pago(session)
+   with Session(engine) as session:
+      seed_roles(session)
+      seed_estados_pedido(session)
+      seed_formas_pago(session)
 
 
 # =========================================
@@ -101,3 +103,4 @@ app.include_router(categoria_router)
 app.include_router(producto_router)
 app.include_router(direccion_entrega_router)
 app.include_router(auth_router)
+app.include_router(usuario_router)

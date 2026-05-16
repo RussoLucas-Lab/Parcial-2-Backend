@@ -1,176 +1,126 @@
-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, status
+from sqlmodel import Session
 
+from app.Core.database import get_session
+from app.Core.deps import get_current_active_user, require_role
+from app.modules.Usuario.model import Usuario
 from app.modules.Usuario.schemas import (
+    RolAsignarRequest,
     UsuarioCreate,
     UsuarioPublic,
-    Token,
 )
-
-from app.modules.Usuario.model import Usuario
 from app.modules.Usuario.service import UsuarioService
-from app.modules.Usuario.unit_of_work import (
-    UsuarioUnitOfWork,
-    get_usuario_uow,
-)
 
-from app.Core.deps import get_current_active_user
+router = APIRouter(prefix="/api/v1", tags=["usuarios"])
 
 
-router = APIRouter(
-    prefix="/api/v1/auth",
-    tags=["auth"],
-)
+def get_usuario_service(
+    session: Session = Depends(get_session),
+) -> UsuarioService:
+    return UsuarioService(session)
 
 
-# ── Registro ───────────────────────────────────────────────────────────
-
-
+# ── Registro ──────────────────────────────────────────────────────────────────
 
 @router.post(
-    "/register",
+    "/auth/register",
     response_model=UsuarioPublic,
     status_code=status.HTTP_201_CREATED,
+    summary="Registrar nuevo usuario (asigna rol CLIENT automáticamente)",
 )
 def register(
     user_in: UsuarioCreate,
-    uow: Annotated[UsuarioUnitOfWork, Depends(get_usuario_uow)],
+    svc: UsuarioService = Depends(get_usuario_service),
 ):
-    with uow:
-        service = UsuarioService(uow)
-        return service.register(user_in)
+    return svc.register(user_in)
 
 
-# ── Login ─────────────────────────────────────────────────────────────
-
-@router.post(
-    "/token",
-    response_model=Token,
-)
-def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    response: Response,
-    uow: Annotated[UsuarioUnitOfWork, Depends(get_usuario_uow)],
-):
-    with uow:
-        service = UsuarioService(uow)
-
-        token = service.authenticate(
-            email=form_data.username,
-            password=form_data.password,
-        )
-
-        response.set_cookie(
-            key="access_token",
-            value=token.access_token,
-            httponly=True,
-            secure=False,  # True en producción HTTPS
-            samesite="lax",
-            max_age=token.expires_in,
-        )
-
-        return token
-
-
-# ── Logout ─────────────────────────────────────────────────────────────
-
-@router.post("/logout")
-def logout(response: Response):
-
-    response.delete_cookie(
-        key="access_token",
-        httponly=True,
-        secure=False,
-        samesite="lax",
-    )
-
-    return {
-        "message": "Sesión cerrada correctamente"
-    }
-
-
-# ─── Usuario autenticado ──────────────────────────────────────────────────────────
+# ── Perfil del usuario autenticado ────────────────────────────────────────────
 
 @router.get(
-    "/me",
+    "/auth/me",
     response_model=UsuarioPublic,
+    summary="Obtener perfil del usuario autenticado (incluye roles)",
 )
 def read_me(
-    current_user: Annotated[
-        Usuario,
-        Depends(get_current_active_user)
-    ],
+    current_user: Annotated[Usuario, Depends(get_current_active_user)],
+    svc: UsuarioService = Depends(get_usuario_service),
 ):
-    return current_user
+    return svc._to_public(current_user)
 
 
-# ── Ruta protegida ───────────────────────────────────────────────────────────
-
-
-@router.get("/privado")
-def ruta_privada(
-    current_user: Annotated[
-        Usuario,
-        Depends(get_current_active_user)
-    ],
-):
-    return {
-        "mensaje": (
-            f"Hola {current_user.nombre} "
-            f"{current_user.apellido}"
-        ),
-        "email": current_user.email,
-    }
-
-
-# ── Listar ───────────────────────────────────────────────────────────
+# ── Administración de usuarios (ADMIN) ────────────────────────────────────────
 
 @router.get(
     "/usuarios",
     response_model=list[UsuarioPublic],
+    summary="Listar todos los usuarios",
+    dependencies=[Depends(require_role(["ADMIN"]))],
 )
-def list_users(
-    uow: Annotated[UsuarioUnitOfWork, Depends(get_usuario_uow)],
-):
-    with uow:
-        service = UsuarioService(uow)
-        return service.list_all()
+def list_users(svc: UsuarioService = Depends(get_usuario_service)):
+    return svc.list_all()
 
-
-# ── Desactivar ───────────────────────────────────────────────────────────
 
 @router.post(
     "/usuarios/{user_id}/desactivar",
     response_model=UsuarioPublic,
+    summary="Desactivar cuenta de usuario (soft delete)",
+    dependencies=[Depends(require_role(["ADMIN"]))],
 )
 def deactivate_user(
     user_id: int,
-    uow: Annotated[UsuarioUnitOfWork, Depends(get_usuario_uow)],
+    svc: UsuarioService = Depends(get_usuario_service),
 ):
-    with uow:
-        service = UsuarioService(uow)
-        return service.set_disabled(
-            user_id=user_id,
-            disabled=True,
-        )
+    return svc.set_disabled(user_id=user_id, disabled=True)
 
-
-# ── Activar ─────────────────────────────────────────────────────────
 
 @router.post(
     "/usuarios/{user_id}/activar",
     response_model=UsuarioPublic,
+    summary="Reactivar cuenta de usuario",
+    dependencies=[Depends(require_role(["ADMIN"]))],
 )
 def activate_user(
     user_id: int,
-    uow: Annotated[UsuarioUnitOfWork, Depends(get_usuario_uow)],
+    svc: UsuarioService = Depends(get_usuario_service),
 ):
-    with uow:
-        service = UsuarioService(uow)
-        return service.set_disabled(
-            user_id=user_id,
-            disabled=False,
-        )
+    return svc.set_disabled(user_id=user_id, disabled=False)
+
+
+# ── Gestión de roles (ADMIN) ──────────────────────────────────────────────────
+
+@router.post(
+    "/usuarios/{user_id}/roles",
+    response_model=UsuarioPublic,
+    status_code=status.HTTP_200_OK,
+    summary="Asignar un rol a un usuario",
+    dependencies=[Depends(require_role(["ADMIN"]))],
+)
+def assign_role(
+    user_id: int,
+    data: RolAsignarRequest,
+    current_user: Annotated[Usuario, Depends(get_current_active_user)],
+    svc: UsuarioService = Depends(get_usuario_service),
+):
+    return svc.assign_role(
+        user_id=user_id,
+        rol_codigo=data.rol_codigo,
+        asignado_por_id=current_user.id,
+    )
+
+
+@router.delete(
+    "/usuarios/{user_id}/roles/{rol_codigo}",
+    response_model=UsuarioPublic,
+    status_code=status.HTTP_200_OK,
+    summary="Revocar un rol de un usuario",
+    dependencies=[Depends(require_role(["ADMIN"]))],
+)
+def revoke_role(
+    user_id: int,
+    rol_codigo: str,
+    svc: UsuarioService = Depends(get_usuario_service),
+):
+    return svc.revoke_role(user_id=user_id, rol_codigo=rol_codigo)

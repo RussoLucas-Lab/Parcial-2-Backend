@@ -10,8 +10,8 @@ from sqlalchemy import Column, Integer, ForeignKey, Numeric, Text, Boolean
 from app.modules.DetallePedido.model import DetallePedido
 
 if TYPE_CHECKING:
-    from app.Categoria.model import Categoria
-    from app.Ingrediente.model import Ingrediente
+    from app.modules.Categoria.model import Categoria
+    from app.modules.Ingrediente.model import Ingrediente
 
 #-------------------------------------------------------------------
 #-------------- Tabla intermedia Producto Ingrediente --------------

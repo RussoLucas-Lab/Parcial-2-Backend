@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
 from app.Core.database import get_session
-from app.Categoria.schemas import (
+from app.modules.Categoria.schemas import (
     CategoriaCreate,
     CategoriaList,
     CategoriaPublic,
     CategoriaTree,
     CategoriaUpdate,
 )
-from app.Categoria.service import CategoriaService
+from app.modules.Categoria.service import CategoriaService
 
 
 router = APIRouter(prefix="/categorias", tags=["Categorias"])

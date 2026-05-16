@@ -3,9 +3,9 @@ from sqlmodel import Field, Relationship
 from typing import TYPE_CHECKING, Optional, List
 from app.Core.base import Base
 
-from app.Producto.model import ProductoCategoria
+from app.modules.Producto.model import ProductoCategoria
 if TYPE_CHECKING:
-    from app.Producto.model import Producto
+    from app.modules.Producto.model import Producto
 
 class Categoria(Base, table= True):
     nombre: str = Field(min_length=3, max_length=100, unique = True, nullable= False)

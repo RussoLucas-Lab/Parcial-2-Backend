@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
 from app.Core.repository import BaseRepository
-from app.Producto.model import Producto
+from app.modules.Producto.model import Producto
 
 class ProductoRepository(BaseRepository[Producto]):
     def __init__(self, session: Session) -> None:

@@ -1,0 +1,92 @@
+from datetime import datetime, timezone
+
+from fastapi import HTTPException, status
+from sqlmodel import Session
+
+from app.Ingrediente.schemas import IngredienteCreate, IngredienteList, IngredientePublic, IngredienteUpdate
+from app.Ingrediente.unit_of_work import IngredienteUnitOfWork
+from app.Ingrediente.model import Ingrediente
+
+class IngredienteService:
+    
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    # ── Helpers privados ───────────────────────────────────────────────────────────
+    # ── Ingrediente por ID ─────────────────────────────────────────────────────────
+
+    def _get_or_404(self, uof: IngredienteUnitOfWork, ingrediente_id) -> Ingrediente:
+        
+        ingrediente = uof.ingredientes.get_by_id(ingrediente_id)
+        if not ingrediente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ingrediente con id {ingrediente_id} no encontrado",
+            )
+        return ingrediente
+
+    # ── Validar nombre de Ingrediente ──────────────────────────────────────────────
+
+    def _assert_nombre_unique(self, uow: IngredienteUnitOfWork, nombre: str) -> None:
+        if uow.ingredientes.get_by_nombre(nombre):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"El nombre '{nombre}' ya está en uso",
+            )
+        
+    # ── Casos de uso ──────────────────────────────────────────────────────────────
+
+    def create (self, data: IngredienteCreate) -> IngredientePublic:
+        with IngredienteUnitOfWork(self._session) as uow:
+            self._assert_nombre_unique(uow, data.nombre)
+            ingrediente = Ingrediente.model_validate(data)
+            uow.ingredientes.add(ingrediente)
+
+            result = IngredientePublic.model_validate(ingrediente)
+        
+        return result
+
+    def get_all(self, offset: int = 0, limit: int = 20) -> IngredienteList:
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingredientes = uow.ingredientes.get_active(offset=offset, limit=limit)
+            total = uow.ingredientes.count()
+
+            result = IngredienteList(
+                data = [IngredientePublic.model_validate(i) for i in ingredientes],
+                total = total
+            )
+
+            return result
+        
+    def get_by_id(self, ingrediente_id:int) -> IngredientePublic:
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingrediente = self._get_or_404(uow, ingrediente_id)
+            result  = IngredientePublic.model_validate(ingrediente)
+        return result
+    
+    def update(self, ingrediente_id:int, data: IngredienteUpdate) -> IngredientePublic:
+        
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingrediente = self._get_or_404(uow, ingrediente_id)
+
+            if data.nombre and data.nombre != ingrediente.nombre:
+                self._assert_nombre_unique(uow, data.nombre)
+        
+            patch = data.model_dump(exclude_unset=True)
+            for field, value in patch.items():
+                setattr(ingrediente, field, value)
+            
+            ingrediente.updated_at = datetime.now(timezone.utc)
+            uow.ingredientes.add(ingrediente)
+            result = IngredientePublic.model_validate(ingrediente)
+        
+        return result
+    
+    def soft_delete(self, ingrediente_id: int) -> None:
+        with IngredienteUnitOfWork(self._session) as uow:
+
+            ingrediente = self._get_or_404(uow, ingrediente_id)
+            ingrediente.activo = False
+            ingrediente.deleted_at = datetime.now(timezone.utc)
+            
+            uow.ingredientes.add(ingrediente)

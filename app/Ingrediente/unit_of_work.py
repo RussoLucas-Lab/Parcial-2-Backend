@@ -1,0 +1,12 @@
+from app.Core.unit_of_work import UnitOfWork
+from sqlmodel import Session
+
+from app.Ingrediente.repository import IngredienteRepository
+from app.Producto.repository import ProductoRepository
+
+
+class IngredienteUnitOfWork(UnitOfWork):
+    def __init__(self, session: Session):
+        super().__init__(session)
+        self.ingredientes = IngredienteRepository(session)
+        #self.productos = ProductoRepository(session) ¿necesita conocer a producto?

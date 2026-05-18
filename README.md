@@ -10,17 +10,6 @@ API REST desarrollada con FastAPI para la gestión de productos, categorías e i
 * SQLAlchemy
 * Uvicorn
 
-## Estructura del Proyecto
-
-```
-app/
-├── Core/              
-├── Producto/
-├── Categoria/
-├── Ingrediente/
-└── main.py
-```
-
 ## Configuración
 
 ### 1. Clonar repositorio
@@ -65,6 +54,7 @@ http://localhost:8000/docs
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Autores
 
 Lucas Russo
+Facundo Bustamante

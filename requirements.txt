@@ -1,5 +1,12 @@
 fastapi[standard]
-pydantic
 sqlmodel
-psycopg2
+psycopg2-binary          
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+pydantic-settings
+python-multipart
 python-dotenv
+httpx
+pytest
+pytest-asyncio  

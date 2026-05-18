@@ -19,3 +19,7 @@ class UnitOfWork:
 
     def rollback(self) -> None:
         self._session.rollback()
+
+def get_uow() -> UnitOfWork:
+    """Dependencia FastAPI: provee un UnitOfWork por request."""
+    return UnitOfWork()

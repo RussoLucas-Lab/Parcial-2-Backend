@@ -7,6 +7,8 @@ from decimal import Decimal
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import Column, Integer, ForeignKey, Numeric, Text, Boolean
 
+from app.modules.DetallePedido.model import DetallePedido
+
 if TYPE_CHECKING:
     from app.Categoria.model import Categoria
     from app.Ingrediente.model import Ingrediente
@@ -94,7 +96,7 @@ class Producto(Base, table=True):
     imagenes_url: List[str] = Field(
     default_factory=list,
     sa_column=Column(ARRAY(Text), nullable=False)
-)
+    )
 
     stock_cantidad: int = Field(
         default=0,
@@ -107,5 +109,18 @@ class Producto(Base, table=True):
         nullable=False
     )
 
-    ingredientes: List["Ingrediente"] = Relationship( back_populates="productos", link_model=ProductoIngrediente)
-    categorias: List["Categoria"] = Relationship( back_populates="productos", link_model=ProductoCategoria)
+    #Relationships
+    
+    ingredientes: List["Ingrediente"] = Relationship(
+        back_populates="productos",
+        link_model=ProductoIngrediente
+        )
+
+    categorias: List["Categoria"] = Relationship( 
+        back_populates="productos",
+        link_model=ProductoCategoria
+        )
+    
+    detalles_pedido: List["DetallePedido"] = Relationship(
+        back_populates="producto",
+    )

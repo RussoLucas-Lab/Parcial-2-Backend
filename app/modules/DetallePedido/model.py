@@ -20,7 +20,7 @@ from app.modules.Pedido.model import Pedido
 
 if TYPE_CHECKING:
     
-    from app.Producto.model import Producto
+    from app.modules.Producto.model import Producto
 
 
 #-------------------------------------------

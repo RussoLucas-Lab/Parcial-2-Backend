@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from app.Categoria.schemas import CategoriaCreate, CategoriaList, CategoriaPublic, CategoriaTree, CategoriaUpdate
+from app.modules.Categoria.schemas import CategoriaCreate, CategoriaList, CategoriaPublic, CategoriaTree, CategoriaUpdate
 
-from app.Categoria.unit_of_work import CategoriaUnitOfWork
-from app.Categoria.model import Categoria
+from app.modules.Categoria.unit_of_work import CategoriaUnitOfWork
+from app.modules.Categoria.model import Categoria
 
 
 class CategoriaService:

@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 
 from app.Core.repository import BaseRepository
-from app.Ingrediente.model import Ingrediente
+from app.modules.Ingrediente.model import Ingrediente
 
 
 class IngredienteRepository(BaseRepository[Ingrediente]):

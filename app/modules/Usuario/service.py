@@ -1,21 +1,45 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlmodel import Session
-
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.Core.config import settings
 from app.Core.security import hash_password, verify_password, create_access_token
 from app.modules.Rol.model import Rol
+from app.modules.Usuario.model import Usuario, UsuarioRol
+from app.modules.Usuario.schemas import (
+    RolAsignarRequest,
+    Token,
+    UsuarioCreate,
+    UsuarioPublic,
+)
 from app.modules.Usuario.unit_of_work import UsuarioUnitOfWork
-from app.modules.Usuario.model import Usuario
-from app.modules.Usuario.schemas import UsuarioCreate, UsuarioList, UsuarioPublic, UsuarioUpdate, Token
+
 
 class UsuarioService:
     def __init__(self, session: Session) -> None:
         self._session = session
-     # ── Helpers privados ───────────────────────────────────────────────────────────
+
+    # ── Helpers privados ──────────────────────────────────────────────────────
+
+    def _get_roles(self, usuario_id: int) -> list[str]:
+        return list(
+            self._session.exec(
+                select(UsuarioRol.rol_codigo)
+                .where(UsuarioRol.usuario_id == usuario_id)
+            ).all()
+        )
+
+    def _to_public(self, user: Usuario) -> UsuarioPublic:
+        return UsuarioPublic(
+            id=user.id,
+            nombre=user.nombre,
+            apellido=user.apellido,
+            email=user.email,
+            celular=user.celular,
+            roles=self._get_roles(user.id),
+        )
+
     def _get_or_404(self, uow: UsuarioUnitOfWork, usuario_id: int) -> Usuario:
         usuario = uow.usuarios.get_by_id(usuario_id)
         if not usuario:
@@ -24,18 +48,12 @@ class UsuarioService:
                 detail=f"Usuario con id {usuario_id} no encontrado",
             )
         return usuario
-    def _assert_email_unique(self, uow: UsuarioUnitOfWork, email: str) -> None:
-        if uow.usuarios.get_by_email(email):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"El email '{email}' ya está en uso",
-            )
-    
-    # ── Casos de uso ──────────────────────────────────────────────────────────────
-    def register(self, user_in: UsuarioCreate):
-        """Registra un nuevo usuario."""
-        with UsuarioUnitOfWork (self._session) as self.uow: 
-            if self.uow.usuarios.get_by_email(user_in.email):
+
+    # ── Casos de uso ──────────────────────────────────────────────────────────
+
+    def register(self, user_in: UsuarioCreate) -> UsuarioPublic:
+        with UsuarioUnitOfWork(self._session) as uow:
+            if uow.usuarios.get_by_email(user_in.email):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="El email ya está registrado",
@@ -48,30 +66,30 @@ class UsuarioService:
                 celular=user_in.celular,
                 password_hash=hash_password(user_in.password),
             )
+            uow.usuarios.add(usuario)  # flush + refresh → populates usuario.id
 
-            # Buscar el rol CLIENT desde la DB
-            rol_cliente = self.uow.session.get(Rol, "CLIENT")
-
-            if not rol_cliente:
+            rol_client = uow.session.get(Rol, "CLIENT")
+            if not rol_client:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Rol CLIENT no configurado",
+                    detail="Rol CLIENT no configurado en la base de datos",
                 )
 
-            # Asignar rol al usuario
-            usuario.roles.append(rol_cliente)
+            uow.session.add(UsuarioRol(usuario_id=usuario.id, rol_codigo="CLIENT"))
+            uow.session.flush()
 
-            # Persistir usuario
-            usuario_db = self.uow.usuarios.add(usuario)
-
-        return UsuarioPublic.model_validate(usuario_db)
-    
+            return UsuarioPublic(
+                id=usuario.id,
+                nombre=usuario.nombre,
+                apellido=usuario.apellido,
+                email=usuario.email,
+                celular=usuario.celular,
+                roles=["CLIENT"],
+            )
 
     def authenticate(self, email: str, password: str) -> Token:
-        """Autentica con email + password y retorna un JWT."""
-        with UsuarioUnitOfWork (self._session) as self.uow: 
-            user = self.uow.usuarios.get_by_email(email)
-
+        with UsuarioUnitOfWork(self._session) as uow:
+            user = uow.usuarios.get_by_email(email)
             if not user or not verify_password(password, user.password_hash):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -79,11 +97,9 @@ class UsuarioService:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
+            roles = self._get_roles(user.id)
             access_token = create_access_token(
-                data={
-                    "sub": str(user.id),
-                    "roles": [rol.codigo for rol in user.roles],
-                }
+                data={"sub": str(user.id), "roles": roles}
             )
 
             return Token(
@@ -92,20 +108,81 @@ class UsuarioService:
                 expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             )
 
-    def list_all(self) -> list[Usuario]:
-        """Lista todos los usuarios."""
-        with UsuarioUnitOfWork (self._session) as self.uow: 
-            return self.uow.usuarios.get_all()
+    def list_all(self) -> list[UsuarioPublic]:
+        with UsuarioUnitOfWork(self._session) as uow:
+            users = uow.usuarios.get_all()
+            return [self._to_public(u) for u in users]
 
-    def set_disabled(self, user_id: int, disabled: bool) -> Usuario:
-        """Activa o desactiva la cuenta de un usuario."""
-        with UsuarioUnitOfWork (self._session) as self.uow: 
-            user = self.uow.usuarios.get_by_id(user_id)
+    def set_disabled(self, user_id: int, disabled: bool) -> UsuarioPublic:
+        with UsuarioUnitOfWork(self._session) as uow:
+            # session.get busca por PK sin filtrar activo (necesario para reactivar)
+            user = uow.session.get(Usuario, user_id)
             if not user:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Usuario no encontrado",
+                    detail=f"Usuario con id {user_id} no encontrado",
                 )
-            user.active = False
-            user.deleted_at = datetime.now(timezone.utc)
-        return self.uow.usuarios.update(user)
+            user.activo = not disabled
+            user.deleted_at = datetime.now(timezone.utc) if disabled else None
+            uow.session.add(user)
+            uow.session.flush()
+            return self._to_public(user)
+
+    def assign_role(
+        self, user_id: int, rol_codigo: str, asignado_por_id: int
+    ) -> UsuarioPublic:
+        with UsuarioUnitOfWork(self._session) as uow:
+            user = self._get_or_404(uow, user_id)
+
+            rol = uow.session.get(Rol, rol_codigo)
+            if not rol:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Rol '{rol_codigo}' no existe",
+                )
+
+            existing = uow.session.exec(
+                select(UsuarioRol)
+                .where(UsuarioRol.usuario_id == user_id)
+                .where(UsuarioRol.rol_codigo == rol_codigo)
+            ).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"El usuario ya tiene el rol '{rol_codigo}'",
+                )
+
+            uow.session.add(
+                UsuarioRol(
+                    usuario_id=user_id,
+                    rol_codigo=rol_codigo,
+                    asignado_por_id=asignado_por_id,
+                )
+            )
+            uow.session.flush()
+            return self._to_public(user)
+
+    def revoke_role(self, user_id: int, rol_codigo: str) -> UsuarioPublic:
+        with UsuarioUnitOfWork(self._session) as uow:
+            user = self._get_or_404(uow, user_id)
+
+            if rol_codigo == "CLIENT":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No se puede revocar el rol CLIENT",
+                )
+
+            usuario_rol = uow.session.exec(
+                select(UsuarioRol)
+                .where(UsuarioRol.usuario_id == user_id)
+                .where(UsuarioRol.rol_codigo == rol_codigo)
+            ).first()
+            if not usuario_rol:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"El usuario no tiene el rol '{rol_codigo}'",
+                )
+
+            uow.session.delete(usuario_rol)
+            uow.session.flush()
+            return self._to_public(user)

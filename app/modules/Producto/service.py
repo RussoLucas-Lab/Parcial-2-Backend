@@ -2,14 +2,14 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
-from app.Producto.schemas import (
+from app.modules.Producto.schemas import (
     ProductoCreate,
     ProductoList,
     ProductoPublic,
     ProductoUpdate,
 )
-from app.Producto.unit_of_work import ProductoUnitOfWork
-from app.Producto.model import Producto
+from app.modules.Producto.unit_of_work import ProductoUnitOfWork
+from app.modules.Producto.model import Producto
 
 
 class ProductoService:

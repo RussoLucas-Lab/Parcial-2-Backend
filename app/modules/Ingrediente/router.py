@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
 from app.Core.database import get_session
-from app.Ingrediente.schemas import (
+from app.modules.Ingrediente.schemas import (
     IngredienteCreate,
     IngredienteList,
     IngredientePublic,
     IngredienteUpdate,
 )
-from app.Ingrediente.service import IngredienteService
+from app.modules.Ingrediente.service import IngredienteService
 
 
 router = APIRouter(prefix="/ingredientes", tags=["Ingredientes"])

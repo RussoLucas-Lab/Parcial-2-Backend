@@ -2,8 +2,8 @@ from sqlmodel import SQLModel, Field
 from typing import Optional, List
 from decimal import Decimal
 
-from app.Categoria.schemas import CategoriaBasic
-from app.Ingrediente.schemas import IngredienteBasic
+from app.modules.Categoria.schemas import CategoriaBasic
+from app.modules.Ingrediente.schemas import IngredienteBasic
 
 
 # ── Entrada ───────────────────────────────────────────────────────────────────

@@ -20,21 +20,13 @@ from app.modules.Producto.model import (
 )
 
 from app.modules.Usuario.model import Usuario
-
 from app.modules.Rol.model import Rol
-
 from app.modules.Auth.model import RefreshToken
-
 from app.modules.DireccionEntrega.model import DireccionEntrega
-
 from app.modules.Pedido.model import Pedido
-
 from app.modules.DetallePedido.model import DetallePedido
-
 from app.modules.EstadoPedido.model import EstadoPedido
-
 from app.modules.HistorialPedido.model import HistorialEstadoPedido
-
 from app.modules.FormaPago.model import FormaPago
 
 
@@ -48,6 +40,7 @@ from app.modules.Producto.router import router as producto_router
 from app.modules.DireccionEntrega.router import router as direccion_entrega_router
 from app.modules.Auth.router import router as auth_router
 from app.modules.Usuario.router import router as usuario_router
+from app.modules.Pedido.router import router as pedido_router
 
 
 # =========================================
@@ -57,7 +50,8 @@ from app.modules.Usuario.router import router as usuario_router
 from app.db.seed import (
    seed_estados_pedido,
    seed_formas_pago,
-   seed_roles
+   seed_roles,
+   seed_usuarios
 )
 
 
@@ -92,7 +86,7 @@ def on_startup():
       seed_roles(session)
       seed_estados_pedido(session)
       seed_formas_pago(session)
-
+      seed_usuarios(session)
 
 # =========================================
 # ROUTERS
@@ -104,3 +98,4 @@ app.include_router(producto_router)
 app.include_router(direccion_entrega_router)
 app.include_router(auth_router)
 app.include_router(usuario_router)
+app.include_router(pedido_router)

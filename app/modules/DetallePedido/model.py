@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING, List, Optional
 
@@ -13,7 +14,7 @@ from sqlalchemy import (
 
 from sqlalchemy.dialects.postgresql import ARRAY
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.Core.base import Base
 from app.modules.Pedido.model import Pedido
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
 #--------- Tabla Detalle Pedido ------------
 #-------------------------------------------
 
-class DetallePedido(Base, table=True):
+class DetallePedido(SQLModel, table=True):
     __tablename__ = "detalle_pedido"
 
     __table_args__ = (
@@ -95,6 +96,16 @@ class DetallePedido(Base, table=True):
             ARRAY(BigInteger),
             nullable=True
         )
+    )
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+
+    deleted_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
 
     # Relationships

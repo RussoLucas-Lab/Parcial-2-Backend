@@ -36,7 +36,7 @@ class HistorialEstadoPedido(Base, table=True):
     pedido_id: int = Field(
         sa_column=Column(
             BigInteger,
-            ForeignKey("pedido.id", ondelete="CASCADE"),
+            ForeignKey("pedido.id"),
             nullable=False
         )
     )

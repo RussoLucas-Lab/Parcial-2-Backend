@@ -25,3 +25,6 @@ class UnitOfWork:
 
    def rollback(self) -> None:
       self._session.rollback()
+
+def get_usuario_uow() -> UnitOfWork:
+    return UnitOfWork()

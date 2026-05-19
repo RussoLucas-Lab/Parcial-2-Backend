@@ -1,8 +1,13 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 
+from app.Core.security import hash_password
 from app.modules.EstadoPedido.model import EstadoPedido
+
+from app.Core.database import engine, create_db_and_tables
+
 from app.modules.Rol.model import Rol
 from app.modules.FormaPago.model import FormaPago
+from app.modules.Usuario.model import Usuario, UsuarioRol
 
 # ── Roles ───────────────────────────────────────────────────────────
 ROLES = [
@@ -118,3 +123,78 @@ def seed_estados_pedido(session):
             session.add(estado)
 
    session.commit()
+
+USUARIOS_INICIALES = [
+    {
+        "nombre": "Admin",
+        "apellido": "Sistema",
+        "email": "admin@example.com",
+        "celular": "2610000000",
+        "password": "Admin1234!",
+        "roles": ["ADMIN"],
+    },
+    {
+        "nombre": "Juan",
+        "apellido": "Pérez",
+        "email": "juan@example.com",
+        "celular": "2611111111",
+        "password": "Juan1234!",
+        "roles": ["CLIENT"],
+    },
+]
+
+
+def seed_usuarios(session: Session) -> None:
+    print("=== Seed — Usuarios Iniciales ===")
+
+    create_db_and_tables()
+
+    with Session(engine) as session:
+
+        for data in USUARIOS_INICIALES:
+
+            existing = session.exec(
+                select(Usuario).where(
+                    Usuario.email == data["email"]
+                )
+            ).first()
+
+            if existing:
+                print(f"[=] Ya existe: {data['email']}")
+                continue
+
+            usuario = Usuario(
+                nombre=data["nombre"],
+                apellido=data["apellido"],
+                email=data["email"],
+                celular=data["celular"],
+                password_hash=hash_password(data["password"]),
+            )
+
+            session.add(usuario)
+
+            # Necesario para obtener usuario.id
+            session.flush()
+
+            # Asignar roles
+            for rol_codigo in data["roles"]:
+
+                rol = session.get(Rol, rol_codigo)
+
+                if not rol:
+                    print(f"[!] Rol inexistente: {rol_codigo}")
+                    continue
+
+                usuario_rol = UsuarioRol(
+                    usuario_id=usuario.id,
+                    rol_codigo=rol_codigo,
+                )
+
+                session.add(usuario_rol)
+
+            print(
+                f"[+] Creado: {usuario.email} "
+                f"(roles={data['roles']})"
+            )
+
+        session.commit()

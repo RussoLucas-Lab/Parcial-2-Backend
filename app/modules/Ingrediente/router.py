@@ -11,7 +11,7 @@ from app.modules.Ingrediente.schemas import (
 from app.modules.Ingrediente.service import IngredienteService
 
 
-router = APIRouter(prefix="/ingredientes", tags=["Ingredientes"])
+router = APIRouter(prefix="/api/v1/ingredientes", tags=["Ingredientes"])
 
 
 def get_ingrediente_service(

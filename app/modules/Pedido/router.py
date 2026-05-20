@@ -9,20 +9,20 @@ from app.modules.Pedido.service import PedidoService
 from app.modules.Usuario.model import Usuario
 
 
-router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
+router = APIRouter(prefix="/api/v1/pedidos", tags=["Pedidos"])
 
 def get_pedido_service(session: Session = Depends(get_session)) -> PedidoService:
     return PedidoService(session)
 
 # ─────────────────────────────────────────────
-# CLIENT: crear pedido
+# CLIENT / ADMIN: crear pedido
 # ─────────────────────────────────────────────
 
 @router.post(
     "",
     response_model=PedidoResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role(["CLIENT"]))]
+    dependencies=[Depends(require_role(["CLIENT", "ADMIN"]))]
 )
 def create_pedido(
     data: PedidoCreate,
@@ -30,8 +30,20 @@ def create_pedido(
     service: PedidoService = Depends(get_pedido_service)
 ):
     return service.create(data, current_user.id)
+# ─────────────────────────────────────────────
+# PEDIDOS / ADMIN: Listar todos los pedidos
+# ─────────────────────────────────────────────
 
-
+@router.get(
+    "",
+    response_model=list[PedidoResponse],
+    dependencies=[Depends(require_role(["PEDIDOS", "ADMIN"]))]
+)
+def list_pedidos(
+    service: PedidoService = Depends(get_pedido_service)
+):
+    return service.list_all()
+        
 # ─────────────────────────────────────────────
 # CLIENT: ver mis pedidos
 # ─────────────────────────────────────────────

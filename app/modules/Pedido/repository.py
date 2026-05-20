@@ -18,6 +18,15 @@ class PedidoRepository(BaseRepository[Pedido]):
             .where(Pedido.activo == True)
         ).first()
 
+    def get_all(self, offset = 0, limit = 20):
+        return list(
+            self.session.exec(
+                select(Pedido)
+                .where(Pedido.activo == True)
+                .offset(offset)
+                .limit(limit)
+            )
+        )
 
     def get_by_usuario(self, usuario_id: int, offset: int = 0, limit: int = 20) -> list[Pedido]:
         return list(

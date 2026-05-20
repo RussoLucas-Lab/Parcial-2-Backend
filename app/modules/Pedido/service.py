@@ -44,7 +44,10 @@ class PedidoService:
             )
         return pedido
 
-    
+    def list_all(self):
+        with PedidoUnitOfWork(self._session) as uow:
+            pedidos = uow.pedidos.get_all()
+            return pedidos   
 
     def create(self, data: PedidoCreate, usuario_id: int) -> PedidoResponse:
 

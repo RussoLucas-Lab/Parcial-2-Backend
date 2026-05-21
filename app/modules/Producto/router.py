@@ -13,7 +13,7 @@ from app.modules.Producto.schemas import (
 from app.modules.Producto.service import ProductoService
 
 
-router = APIRouter(prefix="/productos", tags=["Productos"])
+router = APIRouter(prefix="/api/v1/productos", tags=["Productos"])
 
 
 def get_producto_service(

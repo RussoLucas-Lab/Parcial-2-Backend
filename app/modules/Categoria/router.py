@@ -12,7 +12,7 @@ from app.modules.Categoria.schemas import (
 from app.modules.Categoria.service import CategoriaService
 
 
-router = APIRouter(prefix="/categorias", tags=["Categorias"])
+router = APIRouter(prefix="/api/v1/categorias", tags=["Categorias"])
 
 
 def get_categoria_service(

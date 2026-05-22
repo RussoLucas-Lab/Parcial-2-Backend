@@ -26,6 +26,7 @@ class UsuarioPublic(SQLModel):
     apellido: str
     email: EmailStr
     celular: Optional[str] = None
+    activo: bool
     roles: List[str] = []
 
 
@@ -42,3 +43,6 @@ class Token(SQLModel):
 
 class RolAsignarRequest(SQLModel):
     rol_codigo: str = Field(max_length=20)
+
+class RolesAsignarRequest(SQLModel):
+    roles: list[str] = Field(..., min_items=1, max_items=5)

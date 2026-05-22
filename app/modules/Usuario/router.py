@@ -8,6 +8,7 @@ from app.Core.deps import get_current_active_user, require_role
 from app.modules.Usuario.model import Usuario
 from app.modules.Usuario.schemas import (
     RolAsignarRequest,
+    RolesAsignarRequest,
     UsuarioCreate,
     UsuarioPublic,
 )
@@ -91,24 +92,49 @@ def activate_user(
 
 # ── Gestión de roles (ADMIN) ──────────────────────────────────────────────────
 
-@router.post(
-    "/usuarios/{user_id}/roles",
+@router.put(
+    "/usuarios/{user_id}/rol",
     response_model=UsuarioPublic,
     status_code=status.HTTP_200_OK,
-    summary="Asignar un rol a un usuario",
+    summary="Actualizar roles de un usuario",
     dependencies=[Depends(require_role(["ADMIN"]))],
 )
-def assign_role(
+def update_roles(
     user_id: int,
     data: RolAsignarRequest,
-    current_user: Annotated[Usuario, Depends(get_current_active_user)],
-    svc: UsuarioService = Depends(get_usuario_service),
+    current_user: Annotated[
+        Usuario,
+        Depends(get_current_active_user),
+    ],
+    svc: UsuarioService = Depends(
+        get_usuario_service
+    ),
 ):
-    return svc.assign_role(
+    return svc.update_roles(
         user_id=user_id,
-        rol_codigo=data.rol_codigo,
-        asignado_por_id=current_user.id,
+        roles=data.roles,
+        updated_by_id=current_user.id,
     )
+
+
+@router.put("/usuarios/{user_id}/roles")
+def update_roles(
+    user_id: int,
+    data: RolesAsignarRequest,
+    current_user: Annotated[
+        Usuario,
+        Depends(get_current_active_user),
+    ],
+    svc: UsuarioService = Depends(
+        get_usuario_service
+    ),
+):
+    return svc.update_roles(
+        user_id=user_id,
+        roles=data.roles,
+        updated_by_id=current_user.id,
+    )
+
 
 
 @router.delete(

@@ -154,13 +154,20 @@ class PedidoService:
             )
 
     def get_by_usuario(self, usuario_id: int):
+
         with PedidoUnitOfWork(self._session) as uow:
+
             pedidos = uow.pedidos.get_by_usuario(usuario_id)
-            return pedidos
+
+            return [
+                PedidoResponse.model_validate(
+                    pedido,
+                    from_attributes=True
+                )
+                for pedido in pedidos
+            ]
 
     def get_by_id(self, pedido_id: int) -> PedidoResponse:
-
-        
 
         with PedidoUnitOfWork(self._session) as uow:
 

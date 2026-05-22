@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import Session, delete, select
 
 from app.Core.config import settings
 from app.Core.security import hash_password, verify_password, create_access_token
@@ -37,6 +37,7 @@ class UsuarioService:
             apellido=user.apellido,
             email=user.email,
             celular=user.celular,
+            activo=user.activo,
             roles=self._get_roles(user.id),
         )
 
@@ -127,7 +128,7 @@ class UsuarioService:
             uow.session.add(user)
             uow.session.flush()
             return self._to_public(user)
-
+    # un solo rol
     def assign_role(
         self, user_id: int, rol_codigo: str, asignado_por_id: int
     ) -> UsuarioPublic:
@@ -161,6 +162,75 @@ class UsuarioService:
             )
             uow.session.flush()
             return self._to_public(user)
+
+    def update_roles(
+        self, user_id: int,roles: list[str],updated_by_id: int,
+        ) -> UsuarioPublic:
+
+        with UsuarioUnitOfWork(self._session) as uow:
+
+            user = self._get_or_404(uow, user_id)
+            current_roles = uow.session.exec(
+                select(UsuarioRol).where(
+                    UsuarioRol.usuario_id == user_id
+                )
+            ).all()
+
+            current_role_codes = {
+                r.rol_codigo for r in current_roles
+            }
+
+            new_role_codes = set(roles)
+
+            roles_to_remove = (
+                current_role_codes - new_role_codes
+            )
+
+            if roles_to_remove:
+
+                uow.session.exec(
+                    delete(UsuarioRol)
+                    .where(
+                        UsuarioRol.usuario_id == user_id
+                    )
+                    .where(
+                        UsuarioRol.rol_codigo.in_(
+                            roles_to_remove
+                        )
+                    )
+                )
+
+
+
+            roles_to_add = (
+                new_role_codes - current_role_codes
+            )
+
+            for rol_codigo in roles_to_add:
+
+                rol = uow.session.get(
+                    Rol,
+                    rol_codigo,
+                )
+
+                if not rol:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Rol '{rol_codigo}' no existe",
+                    )
+
+                uow.session.add(
+                    UsuarioRol(
+                        usuario_id=user_id,
+                        rol_codigo=rol_codigo,
+                        asignado_por_id=updated_by_id,
+                    )
+                )
+
+            uow.session.flush()
+
+        return self._to_public(user)
+
 
     def revoke_role(self, user_id: int, rol_codigo: str) -> UsuarioPublic:
         with UsuarioUnitOfWork(self._session) as uow:

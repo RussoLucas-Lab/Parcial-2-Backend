@@ -23,9 +23,20 @@ class PedidoCreate(BaseModel):
 
 # ── Salida ───────────────────────────────────────────────────────────────────
 
+class DetallePedidoResponse(BaseModel):
+
+    model_config = ConfigDict(from_attributes=True)
+
+    producto_id: int
+    cantidad: int
+    nombre_snapshot: str
+    precio_snapshot: Decimal
+    subtotal_snap: Decimal
+
 class PedidoResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
+
     id: int
     usuario_id: int
     direccion_id: Optional[int]
@@ -36,3 +47,5 @@ class PedidoResponse(BaseModel):
     costo_envio: Decimal
     total: Decimal
     notas: Optional[str]
+
+    detalles: list[DetallePedidoResponse]

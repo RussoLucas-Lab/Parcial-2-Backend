@@ -32,11 +32,16 @@ class PedidoRepository(BaseRepository[Pedido]):
         return list(
             self.session.exec(
                 select(Pedido)
+                .options(
+                    selectinload(Pedido.detalles),
+                    selectinload(Pedido.estado),
+                    selectinload(Pedido.forma_pago),
+                )
                 .where(Pedido.usuario_id == usuario_id)
                 .where(Pedido.activo == True)
                 .offset(offset)
                 .limit(limit)
-            )
+        )
         )
 
 

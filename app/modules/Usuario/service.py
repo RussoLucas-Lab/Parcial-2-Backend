@@ -5,6 +5,8 @@ from sqlmodel import Session, delete, select
 
 from app.Core.config import settings
 from app.Core.security import hash_password, verify_password, create_access_token
+from app.modules.DireccionEntrega.model import DireccionEntrega
+from app.modules.DireccionEntrega.schemas import DireccionEntregaPublic
 from app.modules.Rol.model import Rol
 from app.modules.Usuario.model import Usuario, UsuarioRol
 from app.modules.Usuario.schemas import (
@@ -30,6 +32,12 @@ class UsuarioService:
             ).all()
         )
 
+    def _get_direcciones(self, usuario_id: int) -> list[DireccionEntregaPublic]:
+        rows = self._session.exec(
+            select(DireccionEntrega).where(DireccionEntrega.usuario_id == usuario_id)
+        ).all()
+        return [DireccionEntregaPublic.model_validate(d) for d in rows]
+
     def _to_public(self, user: Usuario) -> UsuarioPublic:
         return UsuarioPublic(
             id=user.id,
@@ -39,6 +47,7 @@ class UsuarioService:
             celular=user.celular,
             activo=user.activo,
             roles=self._get_roles(user.id),
+            direcciones=self._get_direcciones(user.id),
         )
 
     def _get_or_404(self, uow: UsuarioUnitOfWork, usuario_id: int) -> Usuario:

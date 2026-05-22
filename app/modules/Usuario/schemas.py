@@ -3,6 +3,8 @@ from typing import List, Optional
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field
 
+from app.modules.DireccionEntrega.schemas import DireccionEntregaPublic
+
 
 class UsuarioCreate(SQLModel):
     nombre: str = Field(min_length=3, max_length=80)
@@ -28,6 +30,7 @@ class UsuarioPublic(SQLModel):
     celular: Optional[str] = None
     activo: bool
     roles: List[str] = []
+    direcciones: List[DireccionEntregaPublic] = []
 
 
 class UsuarioList(SQLModel):

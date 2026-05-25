@@ -140,7 +140,27 @@ USUARIOS_INICIALES = [
         "celular": "2611111111",
         "password": "Juan1234!",
         "roles": ["CLIENT"],
+        
     },
+    {
+        "nombre": "Carlos",
+        "apellido": "Sanchez",
+        "email": "carlos@example.com",
+        "celular": "2612222222",
+        "password": "Carlos1234!",
+        "roles": ["PEDIDOS"],
+        
+    },
+    {
+        "nombre": "Pablo",
+        "apellido": "Garcia",
+        "email": "pablo@example.com",
+        "celular": "2613333333",
+        "password": "Pablo1234!",
+        "roles": ["STOCK"],
+        
+    },
+
 ]
 
 

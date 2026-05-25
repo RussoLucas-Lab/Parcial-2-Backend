@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
 from app.Core.database import get_session
+from app.Core.deps import require_role
 from app.modules.Producto.schemas import (
     ProductoCreate,
     ProductoList,
@@ -13,7 +14,7 @@ from app.modules.Producto.schemas import (
 from app.modules.Producto.service import ProductoService
 
 
-router = APIRouter(prefix="/api/v1/productos", tags=["Productos"])
+router = APIRouter(prefix="/api/v1/productos", tags=["Productos"],)
 
 
 def get_producto_service(
@@ -27,6 +28,9 @@ def get_producto_service(
     response_model=ProductoPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Crear un producto",
+    dependencies=[
+        Depends(require_role(["ADMIN", "STOCK"]))
+    ],
 )
 def create_producto(
     data: ProductoCreate,
@@ -67,6 +71,9 @@ def get_producto(
     status_code=status.HTTP_200_OK,
     response_model=ProductoPublic,
     summary="Actualización parcial de producto",
+    dependencies=[
+        Depends(require_role(["ADMIN", "STOCK"]))
+    ],
 )
 def update_producto(
     producto_id: int,
@@ -80,6 +87,9 @@ def update_producto(
     "/{producto_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft delete de producto",
+    dependencies=[
+        Depends(require_role(["ADMIN", "STOCK"]))
+    ],
 )
 def delete_producto(
     producto_id: int,

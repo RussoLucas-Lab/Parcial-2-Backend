@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
 from app.Core.database import get_session
+from app.Core.deps import require_role
 from app.modules.Categoria.schemas import (
     CategoriaCreate,
     CategoriaList,
@@ -12,7 +13,7 @@ from app.modules.Categoria.schemas import (
 from app.modules.Categoria.service import CategoriaService
 
 
-router = APIRouter(prefix="/api/v1/categorias", tags=["Categorias"])
+router = APIRouter(prefix="/api/v1/categorias", tags=["Categorias"],)
 
 
 def get_categoria_service(
@@ -26,6 +27,9 @@ def get_categoria_service(
     response_model=CategoriaPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Crear una categoria",
+    dependencies=[
+        Depends(require_role(["ADMIN", "STOCK"]))
+    ],
 )
 def create_categoria(
     data: CategoriaCreate,
@@ -66,6 +70,9 @@ def get_categoria(
     response_model=CategoriaPublic,
     status_code=status.HTTP_200_OK,
     summary="Actualización parcial de categoria",
+    dependencies=[
+        Depends(require_role(["ADMIN", "STOCK"]))
+    ],
 )
 def update_categoria(
     categoria_id: int,
@@ -79,6 +86,9 @@ def update_categoria(
     "/{categoria_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft delete de categoria",
+    dependencies=[
+        Depends(require_role(["ADMIN", "STOCK"]))
+    ],
 )
 def delete_categoria(
     categoria_id: int,

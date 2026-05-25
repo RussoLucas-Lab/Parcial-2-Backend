@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
 from app.Core.database import get_session
+from app.Core.permission import require_same_user_or_admin
 from app.modules.DireccionEntrega.schemas import (
     DireccionEntregaCreate,
     DireccionEntregaList,
@@ -14,6 +15,9 @@ from app.modules.DireccionEntrega.service import DireccionEntregaService
 router = APIRouter(
     prefix="/api/v1/usuarios/{usuario_id}/direcciones",
     tags=["DireccionesEntrega"],
+    dependencies=[
+        Depends(require_same_user_or_admin)
+    ],
 )
 
 
@@ -79,6 +83,7 @@ def get_direccion(
     response_model=DireccionEntregaPublic,
     status_code=status.HTTP_200_OK,
     summary="Actualización parcial de una dirección de entrega",
+
 )
 def update_direccion(
     usuario_id: int,

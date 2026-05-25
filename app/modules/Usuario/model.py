@@ -94,6 +94,7 @@ class Usuario(Base, table=True):
         max_length=60,
         nullable=False
     )
+    
 
     # Relationships
 
@@ -116,3 +117,10 @@ class Usuario(Base, table=True):
     historial_cambios: List["HistorialEstadoPedido"] = Relationship(
         back_populates="usuario"
     )
+
+    usuario_roles: List["UsuarioRol"] = Relationship(
+    sa_relationship=relationship(
+        "UsuarioRol",
+        foreign_keys="[UsuarioRol.usuario_id]",
+    )
+)

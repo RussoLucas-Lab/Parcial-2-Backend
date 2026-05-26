@@ -10,7 +10,6 @@ from app.modules.DireccionEntrega.schemas import DireccionEntregaPublic
 from app.modules.Rol.model import Rol
 from app.modules.Usuario.model import Usuario, UsuarioRol
 from app.modules.Usuario.schemas import (
-    RolAsignarRequest,
     Token,
     UsuarioCreate,
     UsuarioPublic,

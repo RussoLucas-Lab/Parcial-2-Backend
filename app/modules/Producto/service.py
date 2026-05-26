@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from fastapi import HTTPException, status
+from fastapi import HTTPException, Query, status
 from sqlmodel import Session, select
 
 from app.modules.Producto.schemas import (
@@ -64,7 +64,6 @@ class ProductoService:
                 data.model_dump(exclude={"ingrediente_ids", "categoria_ids"})
             )
 
-            # 🔥 asignar relaciones
             producto.ingredientes = ingredientes
             producto.categorias = categorias
 
@@ -72,7 +71,9 @@ class ProductoService:
 
             return ProductoPublic.model_validate(producto, from_attributes=True)
 
-    def get_all(self, offset: int = 0, limit: int = 20) -> ProductoList:
+    def get_all(self,
+                offset: int = Query(default=0, ge=0),
+                limit: int = Query(default=20, ge=1, le=100),) -> ProductoList:
         with ProductoUnitOfWork(self._session) as uow:
             productos = uow.productos.get_active_with_relations(offset=offset, limit=limit)
             total = uow.productos.count()

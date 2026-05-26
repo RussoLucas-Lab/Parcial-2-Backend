@@ -29,7 +29,7 @@ def get_producto_service(
     status_code=status.HTTP_201_CREATED,
     summary="Crear un producto",
     dependencies=[
-        Depends(require_role(["ADMIN", "STOCK"]))
+        Depends(require_role(["ADMIN"]))
     ],
 )
 def create_producto(
@@ -88,7 +88,7 @@ def update_producto(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft delete de producto",
     dependencies=[
-        Depends(require_role(["ADMIN", "STOCK"]))
+        Depends(require_role(["ADMIN"]))
     ],
 )
 def delete_producto(

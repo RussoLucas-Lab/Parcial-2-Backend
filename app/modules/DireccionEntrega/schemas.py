@@ -28,7 +28,7 @@ class DireccionEntregaUpdate(SQLModel):
     latitud: Optional[Decimal] = None
     longitud: Optional[Decimal] = None
 
-    #ver esto
+    
     es_principal: Optional[bool] = None
 
 

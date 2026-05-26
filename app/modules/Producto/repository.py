@@ -46,6 +46,8 @@ class ProductoRepository(BaseRepository[Producto]):
 
         return list(self.session.exec(statement))
 
+    
+
     def count(self) -> int:
 
         return len(self.session.exec(select(Producto).where(Producto.activo == True)).all())

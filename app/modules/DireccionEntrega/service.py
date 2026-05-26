@@ -83,22 +83,39 @@ class DireccionEntregaService:
         return result
 
     def update(
-        self, usuario_id: int, direccion_id: int, data: DireccionEntregaUpdate
-    ) -> DireccionEntregaPublic:
+        self, usuario_id: int, direccion_id: int, data: DireccionEntregaUpdate ) -> DireccionEntregaPublic:
+
         with DireccionEntregaUnitOfWork(self._session) as uow:
+
             direccion = self._get_or_404(uow, direccion_id)
             self._assert_pertenece_al_usuario(direccion, usuario_id)
 
             patch = data.model_dump(exclude_unset=True)
+      
+            if patch.get("es_principal") is True:
+
+                direccion_principal = (
+                    uow.direcciones.get_principal_by_usuario(usuario_id)
+                )
+
+                if (
+                    direccion_principal
+                    and direccion_principal.id != direccion.id
+                ):
+                    direccion_principal.es_principal = False
+                    uow.direcciones.add(direccion_principal)
+
             for field, value in patch.items():
                 setattr(direccion, field, value)
 
             direccion.updated_at = datetime.now(timezone.utc)
+
             uow.direcciones.add(direccion)
 
             result = DireccionEntregaPublic.model_validate(direccion)
 
-        return result
+            return result
+
 
     def soft_delete(self, usuario_id: int, direccion_id: int) -> None:
         with DireccionEntregaUnitOfWork(self._session) as uow:

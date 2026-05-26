@@ -47,5 +47,14 @@ class DireccionEntregaRepository(BaseRepository[DireccionEntrega]):
             ).all()
         )
 
+    def get_principal_by_usuario(self, usuario_id: int):
+        statement = select(DireccionEntrega).where(
+            DireccionEntrega.usuario_id == usuario_id,
+            DireccionEntrega.es_principal == True,
+            DireccionEntrega.activo == True
+        )
+
+        return self.session.exec(statement).first()
+
     def count(self) -> int:
         return len(self.session.exec(select(DireccionEntrega)).all())

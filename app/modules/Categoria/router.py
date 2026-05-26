@@ -28,7 +28,7 @@ def get_categoria_service(
     status_code=status.HTTP_201_CREATED,
     summary="Crear una categoria",
     dependencies=[
-        Depends(require_role(["ADMIN", "STOCK"]))
+        Depends(require_role(["ADMIN"]))
     ],
 )
 def create_categoria(
@@ -71,7 +71,7 @@ def get_categoria(
     status_code=status.HTTP_200_OK,
     summary="Actualización parcial de categoria",
     dependencies=[
-        Depends(require_role(["ADMIN", "STOCK"]))
+        Depends(require_role(["ADMIN"]))
     ],
 )
 def update_categoria(
@@ -87,7 +87,7 @@ def update_categoria(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft delete de categoria",
     dependencies=[
-        Depends(require_role(["ADMIN", "STOCK"]))
+        Depends(require_role(["ADMIN"]))
     ],
 )
 def delete_categoria(

@@ -144,6 +144,19 @@ class CategoriaService:
         with CategoriaUnitOfWork(self._session) as uow:
 
             categoria = self._get_or_404(uow, categoria_id)
+
+            productos_activos = [
+            producto
+            for producto in categoria.productos
+            if producto.activo
+        ]
+
+            if productos_activos:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="No se puede eliminar la categoría porque tiene productos activos asociados."
+                )
+
             categoria.activo = False
             categoria.deleted_at = datetime.now(timezone.utc)
             

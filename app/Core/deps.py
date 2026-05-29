@@ -1,40 +1,37 @@
 from typing import Annotated
-
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-
 from app.Core.security import decode_access_token
-
+from app.Core.websocket import manager as ws_manager
 from app.modules.Usuario.model import Usuario
-
 from app.modules.Usuario.unit_of_work import (
-    UnitOfWork as UsuarioUnitOfWork,
-    get_usuario_uow
+   UnitOfWork as UsuarioUnitOfWork,
+   get_usuario_uow
 )
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
 
-    async def __call__(self, request: Request) -> str | None:
+   async def __call__(self, request: Request) -> str | None:
 
-        token = request.cookies.get("access_token")
+      token = request.cookies.get("access_token")
 
-        if not token:
+      if not token:
 
             if self.auto_error:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="No autenticado",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
+               raise HTTPException(
+                  status_code=status.HTTP_401_UNAUTHORIZED,
+                  detail="No autenticado",
+                  headers={"WWW-Authenticate": "Bearer"},
+               )
 
             return None
 
-        return token
+      return token
 
 
 oauth2_scheme = OAuth2PasswordBearerWithCookie(
-    tokenUrl="/api/v1/auth/token"
+   tokenUrl="/api/v1/auth/token"
 )
 
 
@@ -88,6 +85,9 @@ async def get_current_active_user(
 
     return current_user
 
+# Función para obtener el gestor de conexiones WebSocket (singleton)
+def get_ws_manager():
+   return ws_manager
 
 def require_role(allowed_roles: list[str]):
 

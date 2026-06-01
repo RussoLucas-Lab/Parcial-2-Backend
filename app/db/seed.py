@@ -19,7 +19,17 @@ ROLES = [
    Rol(
       codigo="CAJERO",
       nombre="Cajero",
-      descripcion="Confirmación de pedidos y gestión de pagos",
+      descripcion="Gestiona ventas y caja",
+   ),
+   Rol(
+      codigo="COCINA",
+      nombre="Cocina",
+      descripcion="Prepara pedidos y actualiza estados",
+   ),
+   Rol(
+      codigo="STOCK",
+      nombre="Stock",
+      descripcion="Actualiza stock y disponible",
    ),
    Rol(
       codigo="PEDIDOS",

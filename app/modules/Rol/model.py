@@ -1,9 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
-
 from sqlmodel import Field, Relationship, SQLModel
-
 from app.modules.Usuario.model import UsuarioRol
-
 
 if TYPE_CHECKING:
     from app.modules.Usuario.model import Usuario

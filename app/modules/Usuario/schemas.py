@@ -1,8 +1,6 @@
 from typing import List, Optional
-
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field
-
 from app.modules.DireccionEntrega.schemas import DireccionEntregaPublic
 
 
@@ -12,6 +10,10 @@ class UsuarioCreate(SQLModel):
     email: EmailStr
     celular: Optional[str] = Field(default=None, max_length=20)
     password: str = Field(min_length=8, max_length=100)
+
+# Utilizado para crear un usuario junto con sus roles asignados
+class UsuarioCreateConRoles(UsuarioCreate):
+    roles: list[str] = Field(..., min_items=1)
 
 
 class UsuarioUpdate(SQLModel):

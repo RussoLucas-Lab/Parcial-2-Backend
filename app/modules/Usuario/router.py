@@ -10,6 +10,7 @@ from app.modules.Usuario.schemas import (
     RolAsignarRequest,
     RolesAsignarRequest,
     UsuarioCreate,
+    UsuarioCreateConRoles,
     UsuarioPublic,
 )
 from app.modules.Usuario.service import UsuarioService
@@ -50,6 +51,23 @@ def read_me(
     svc: UsuarioService = Depends(get_usuario_service),
 ):
     return svc._to_public(current_user)
+
+
+# ── Crear usuario con rol (ADMIN) ────────────────────────────────────────────
+
+@router.post(
+    "/usuarios",
+    response_model=UsuarioPublic,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear usuario con roles asignados desde el front (solo ADMIN)",
+    dependencies=[Depends(require_role(["ADMIN"]))],
+)
+def create_user_with_roles(
+    user_in: UsuarioCreateConRoles,
+    current_user: Annotated[Usuario, Depends(get_current_active_user)],
+    svc: UsuarioService = Depends(get_usuario_service),
+):
+    return svc.create_with_roles(user_in, created_by_id=current_user.id)
 
 
 # ── Administración de usuarios (ADMIN) ────────────────────────────────────────

@@ -17,9 +17,9 @@ ROLES = [
       descripcion="Acceso total sin restricciones",
    ),
    Rol(
-      codigo="STOCK",
-      nombre="Stock",
-      descripcion="Actualiza stock y disponible",
+      codigo="CAJERO",
+      nombre="Cajero",
+      descripcion="Confirmación de pedidos y gestión de pagos",
    ),
    Rol(
       codigo="PEDIDOS",

@@ -12,6 +12,7 @@ from app.modules.Usuario.model import Usuario, UsuarioRol
 from app.modules.Usuario.schemas import (
     Token,
     UsuarioCreate,
+    UsuarioCreateConRoles,
     UsuarioPublic,
 )
 from app.modules.Usuario.unit_of_work import UsuarioUnitOfWork
@@ -95,6 +96,45 @@ class UsuarioService:
                 celular=usuario.celular,
                 roles=["CLIENT"],
             )
+
+    def create_with_roles(
+        self, user_in: UsuarioCreateConRoles, created_by_id: int
+    ) -> UsuarioPublic:
+        with UsuarioUnitOfWork(self._session) as uow:
+            if uow.usuarios.get_by_email(user_in.email):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="El email ya está registrado",
+                )
+
+            for rol_codigo in user_in.roles:
+                if not uow.session.get(Rol, rol_codigo):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Rol '{rol_codigo}' no existe",
+                    )
+
+            usuario = Usuario(
+                nombre=user_in.nombre,
+                apellido=user_in.apellido,
+                email=user_in.email,
+                celular=user_in.celular,
+                password_hash=hash_password(user_in.password),
+            )
+            uow.usuarios.add(usuario)
+            assert usuario.id is not None
+
+            for rol_codigo in user_in.roles:
+                uow.session.add(
+                    UsuarioRol(
+                        usuario_id=usuario.id,
+                        rol_codigo=rol_codigo,
+                        asignado_por_id=created_by_id,
+                    )
+                )
+            uow.session.flush()
+
+            return self._to_public(usuario)
 
     def authenticate(self, email: str, password: str) -> Token:
         with UsuarioUnitOfWork(self._session) as uow:

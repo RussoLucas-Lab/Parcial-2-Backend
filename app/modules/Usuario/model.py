@@ -1,9 +1,7 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
-
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy.orm import relationship
-
 from app.Core.base import Base
 
 

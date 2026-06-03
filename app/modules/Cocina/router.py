@@ -9,6 +9,11 @@ from app.modules.Usuario.unit_of_work import UsuarioUnitOfWork
 
 router = APIRouter(prefix="/api/v1/", tags=["Cocina"],)
 
+ALLOWED_ORIGINS = {
+    "http://localhost:5173",
+    "http://localhost:5174",
+}
+
 # ─── WebSocket para tiempo real ─────────────────────────────────────────────
 @router.websocket("/cocina/ws")
 async def websocket_endpoint(
@@ -17,11 +22,18 @@ async def websocket_endpoint(
     # WebSocket /api/v1/cocina/ws — canal bidireccional para el KDS.
     #
     # Flujo de seguridad en el handshake:
+    #   0. Valida Origin para prevenir CSRF via WebSocket
     #   1. Obtiene token JWT desde cookie HttpOnly "access_token"
     #   2. Decodifica y valida firma + expiración
     #   3. Verifica en BD que el usuario exista, esté activo y tenga rol cocina/admin
     #   4. Registra en ConnectionManager para recibir broadcasts
     #   5. Mantiene conexión abierta escuchando desconexiones
+
+    # 0. Validar Origin (CORSMiddleware no cubre WebSocket)
+    origin = websocket.headers.get("origin")
+    if origin not in ALLOWED_ORIGINS:
+        await websocket.close(code=1008, reason="Origen no permitido")
+        return
 
     # 1. Obtener el token de la cookie HttpOnly
     token = websocket.cookies.get("access_token")
@@ -53,16 +65,16 @@ async def websocket_endpoint(
     with Session(engine) as db_session:
         with UsuarioUnitOfWork(db_session) as uow:
             user = uow.usuarios.get_by_username(username)
-            if not user or user.disabled:
+            if not user or not user.activo:
                 # Misma mecánica: accept() obligatorio antes de close()
                 # para que event.code y event.reason lleguen al frontend
                 await websocket.accept()
                 await websocket.close(code=1008, reason="Usuario inválido o inactivo")
                 return
 
-            # Compara rol ignorando mayúsculas y espacios
-            rol_upper = user.role.upper().strip()
-            if rol_upper not in ("COCINA", "PEDIDOS", "ADMIN"):
+            # Compara roles ignorando mayúsculas y espacios
+            user_roles = [ur.rol_codigo.upper().strip() for ur in user.usuario_roles]
+            if not any(r in ("COCINA", "PEDIDOS", "ADMIN") for r in user_roles):
                 await websocket.accept()
                 await websocket.close(code=1008, reason="Permisos insuficientes")
                 return

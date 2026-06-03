@@ -56,7 +56,7 @@ def read_me(
 # ── Crear usuario con rol (ADMIN) ────────────────────────────────────────────
 
 @router.post(
-    "/auth/usuarios",
+    "/usuarios",
     response_model=UsuarioPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Crear usuario con roles asignados desde el front (solo ADMIN)",

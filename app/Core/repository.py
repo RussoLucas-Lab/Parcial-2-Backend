@@ -2,7 +2,8 @@ from typing import Generic, TypeVar, Type, Sequence
 from sqlmodel import Session, SQLModel, select
 
 ModelT = TypeVar("ModelT", bound=SQLModel) #Para el tipado fuerte
-
+# TypeVar genérico: T debe ser una subclase de SQLModel (tabla)
+T = TypeVar("T", bound=SQLModel)
 
 class BaseRepository(Generic[ModelT]):
    
@@ -26,7 +27,14 @@ class BaseRepository(Generic[ModelT]):
       self.session.refresh(instance)
       return instance
 
+   def update(self, entity: T) -> T:
+        # UPDATE. session.add() en SQLModel hace upsert.
+        self.session.add(entity)
+        self.session.flush()
+        self.session.refresh(entity)
+        return entity
+
    def delete(self, instance: ModelT) -> None:
-      
+
       self.session.delete(instance)
       self.session.flush()

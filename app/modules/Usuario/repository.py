@@ -8,11 +8,11 @@ class UsuarioRepository(BaseRepository[Usuario]):
       super().__init__(session, Usuario)
 
    def get_by_id(self, record_id: int) -> Usuario | None:
-        return self.session.exec(
+      return self.session.exec(
             select(Usuario)
             .where(Usuario.id == record_id)
             .where(Usuario.activo == True)
-        ).first()
+      ).first()
 
    def get_by_ids(self, ids: list[int]):
       if not ids:
@@ -40,6 +40,3 @@ class UsuarioRepository(BaseRepository[Usuario]):
    
    def count(self) -> int:
       return len(self.session.exec(select(Usuario)).all())
-
-
-    

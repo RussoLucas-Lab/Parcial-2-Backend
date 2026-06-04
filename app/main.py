@@ -28,6 +28,7 @@ from app.modules.DetallePedido.model import DetallePedido
 from app.modules.EstadoPedido.model import EstadoPedido
 from app.modules.HistorialPedido.model import HistorialEstadoPedido
 from app.modules.FormaPago.model import FormaPago
+from app.modules.Pagos.models import Pago
 
 
 # =========================================
@@ -41,6 +42,7 @@ from app.modules.DireccionEntrega.router import router as direccion_entrega_rout
 from app.modules.Auth.router import router as auth_router
 from app.modules.Usuario.router import router as usuario_router
 from app.modules.Pedido.router import router as pedido_router
+from app.modules.Pagos.Router import router as pagos_router
 
 
 # =========================================
@@ -99,3 +101,4 @@ app.include_router(direccion_entrega_router)
 app.include_router(auth_router)
 app.include_router(usuario_router)
 app.include_router(pedido_router)
+app.include_router(pagos_router)

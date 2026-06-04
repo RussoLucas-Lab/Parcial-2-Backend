@@ -6,6 +6,8 @@
     # permitir cambiar entornos fácilmente (dev, test, producción)
 # ──────────────────────────────────────────────────────────────────────────────
 
+from typing import Optional
+
 from pydantic import computed_field
 
 # BaseSettings es una clase de Pydantic que permite definir configuraciones que se pueden cargar desde variables de entorno o archivos .env
@@ -50,5 +52,11 @@ class Settings(BaseSettings):
     # ─── Instancia Global ───────────────────────────────────────────────────
     # instancia global de configuración queasegura que toda la aplicación use la misma configuración centralizada.
 
+
+     # --- MercadoPago ---
+    MP_ACCESS_TOKEN:  Optional[str] = None
+    MP_PUBLIC_KEY:    Optional[str] = None
+    MP_WEBHOOK_URL:   Optional[str] = None
+    NGROK_URL:        Optional[str] = None
 
 settings = Settings()

@@ -10,3 +10,4 @@ python-dotenv
 httpx
 pytest
 pytest-asyncio  
+mercadopago

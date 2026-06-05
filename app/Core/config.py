@@ -59,4 +59,10 @@ class Settings(BaseSettings):
     MP_WEBHOOK_URL:   Optional[str] = None
     NGROK_URL:        Optional[str] = None
 
+
+    # --- CORS y Frontend ---
+    CORS_ORIGINS:       str = "http://localhost:5173"
+    VITE_FRONTEND_URL:  str = "http://localhost:5173"
+    VITE_API_URL:       str = "http://localhost:8000"
+    
 settings = Settings()

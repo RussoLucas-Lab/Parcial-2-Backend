@@ -372,7 +372,9 @@ class PaymentService:
             topic = query_params.get("topic") or query_params.get("type")
 
         # El ID que usaremos para consultar a MP
-        pago_mp_id = payment_id or data_id
+        pago_mp_id = data_id
+        #TODO BORRAR DESPUÉS DE TESTEAR
+        print( pago_mp_id)
 
         # ── Validaciones ─────────────────────────────────────────────────
         if not pago_mp_id:
@@ -388,7 +390,12 @@ class PaymentService:
         try:
             # PASO 1: Consultar el estado real del pago a MP
             mp_info = self._consultar_pago_mp(int(pago_mp_id))
+            
+            #TODO BORRAR DESPUÉS DE TESTEAR
+            print("MP info:", mp_info)
+
             estado_mp = mp_info.get("mp_status")
+            print("Estado MP:", estado_mp)
 
             # PASO 2: Mapear estado de MP a nuestro estado local
             #
@@ -411,17 +418,20 @@ class PaymentService:
             elif estado_mp in ("pending", "in_process", "authorized"):
                 nuevo_estado = "pendiente"
             else:
+                
                 return {"status": "ignored",
                         "reason": f"Unknown status: {estado_mp}"}
 
             # PASO 3: Buscar el pago en nuestra BD
             with PagoUnitOfWork(self._session) as uow:
+                print("entro al with")    
                 # Primero intentamos por mp_payment_id (el caso más común)
                 pago = uow.pagos.get_by_mp_payment_id(int(pago_mp_id))
 
                 # Si no lo encontramos, quizás el webhook llegó con un
                 # merchant_order_id. Intentamos buscar por ese.
                 if not pago and mp_info.get("mp_merchant_order_id"):
+                    print("Buscando por merchant_order_id:", mp_info.get("mp_merchant_order_id")  )
                     pago = uow.pagos.get_by_mp_merchant_order_id(
                         mp_info["mp_merchant_order_id"]
                     )
@@ -430,8 +440,10 @@ class PaymentService:
                 # Esto puede pasar si el webhook llega ANTES de que
                 # hayamos creado el pago en nuestra BD (race condition).
                 if not pago:
+                    print("Pago no encontrado en BD para MP payment_id:", pago_mp_id       )
                     return {"status": "ignored",
                             "reason": "Pago not found in local DB"}
+                print("Pago encontrado en BD:", pago    )
 
                 # ── Idempotencia ─────────────────────────────────────────
                 # Si el pago ya fue procesado (no está pendiente), ignoramos
@@ -449,6 +461,8 @@ class PaymentService:
                 pago.estado = nuevo_estado
                 pago.updated_at = datetime.utcnow()
                 uow.pagos.update(pago)
+
+                print("Pago actualizado en BD:", pago   )
 
                 # PASO 5: Si el pago se aprobó, actualizar el pedido
                 #

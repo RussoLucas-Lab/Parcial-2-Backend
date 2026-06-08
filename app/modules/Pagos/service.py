@@ -472,7 +472,7 @@ class PaymentService:
                 if nuevo_estado == "aprobado":
                     pedido = self._session.get(Pedido, pago.pedido_id)
                     if pedido:
-                        pedido.estado = "pagado"
+                        pedido.estado_codigo = "PENDIENTE"
                         pedido.updated_at = datetime.utcnow()
                         self._session.add(pedido)
 
@@ -568,11 +568,12 @@ class PaymentService:
                     pago.updated_at = datetime.utcnow()
                     uow.pagos.update(pago)
 
+                    #TODO el pedido lo confirma el Cajero, lo que se aprueba es el pago
                     # Si se aprobó, actualizamos el pedido
-                    if nuevo_estado == "aprobado":
-                        pedido.estado = "pagado"
-                        pedido.updated_at = datetime.utcnow()
-                        self._session.add(pedido)
+                    #if nuevo_estado == "aprobado":
+                    #    pedido.estado_codigo = "CONFIRMADO"
+                    #    pedido.updated_at = datetime.utcnow()
+                    #    self._session.add(pedido)
 
             return PagoEstadoResponse(estado=nuevo_estado, pedido_id=pedido_id)
 

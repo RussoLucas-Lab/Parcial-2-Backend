@@ -63,6 +63,6 @@ class Settings(BaseSettings):
     # --- CORS y Frontend ---
     CORS_ORIGINS:       str = "http://localhost:5173"
     VITE_FRONTEND_URL:  str = "http://localhost:5173"
-    VITE_API_URL:       str = "http://localhost:8000"
+    VITE_API_URL:       str = "https://unmelodramatically-paragonitic-marcel.ngrok-free.dev"
     
 settings = Settings()

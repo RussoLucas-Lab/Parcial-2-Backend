@@ -16,17 +16,24 @@ def get_auth_service(session: Session = Depends(get_session)) -> AuthService:
 
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str, expires_in: int) -> None:
-   response.set_cookie(
-      key="access_token", value=access_token,
-      max_age=expires_in,
-      httponly=True, samesite="lax", secure=False,
-   )
-   response.set_cookie(
-      key="refresh_token", value=refresh_token,
-        max_age=60 * 60 * 24 * 7,  # 7 días
-      path="/api/v1/auth/refresh",
-      httponly=True, samesite="lax", secure=False,
-   )
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=expires_in,
+        httponly=True,
+        samesite="none",
+        secure=True,
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        max_age=60 * 60 * 24 * 7,
+        path="/api/v1/auth/refresh",
+        httponly=True,
+        samesite="none",
+        secure=True,
+    )
 
 
 # ── Login ─────────────────────────────────────────────────────────────────────
@@ -42,7 +49,9 @@ def login(
    response: Response,
    svc: AuthService = Depends(get_auth_service),
 ) -> SessionResponse:
+   
    result = svc.login(data)
+   
    _set_auth_cookies(response, result.access_token, result.refresh_token, result.expires_in)
    return SessionResponse(expires_in=result.expires_in)
 

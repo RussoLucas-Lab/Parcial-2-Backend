@@ -5,9 +5,6 @@
 __pycache__/
 *.pyc
 
-# Variables de entorno
-.env
-
 # Archivos de VSCode
 .vscode/
 

@@ -1,4 +1,4 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 from sqlalchemy.orm import selectinload
 
 from app.Core.repository import BaseRepository
@@ -51,3 +51,6 @@ class ProductoRepository(BaseRepository[Producto]):
     def count(self) -> int:
 
         return len(self.session.exec(select(Producto).where(Producto.activo == True)).all())
+    
+
+    

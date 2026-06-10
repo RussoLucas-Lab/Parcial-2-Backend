@@ -1,4 +1,6 @@
-from sqlmodel import Session, select
+import datetime
+
+from sqlmodel import Session, func, select
 from sqlalchemy.orm import selectinload
 from app.Core.repository import BaseRepository
 from app.modules.Pedido.model import Pedido
@@ -69,3 +71,92 @@ class PedidoRepository(BaseRepository[Pedido]):
 
     def count(self) -> int:
         return len(self.session.exec(select(Pedido).where(Pedido.activo == True)).all())
+
+    # ── Estadísticas ───────────────────────────────────────────────────────────────────
+    
+    # Ventas por día en los últimos X días
+    def get_pedidos_por_periodo(
+    self,
+    dias: int
+    ):
+
+        fecha_limite = datetime.datetime.now() - datetime.timedelta(days=dias)
+
+        statement = (
+            select(
+                func.date(Pedido.created_at).label("fecha"),
+                func.count(Pedido.id).label("cantidad")
+            )
+            .where(Pedido.created_at >= fecha_limite)
+            .where(Pedido.deleted_at.is_(None))
+            .group_by(func.date(Pedido.created_at))
+            .order_by(func.date(Pedido.created_at))
+        )
+
+        resultados = self.session.exec(statement).all()
+
+        return [
+            {
+                "fecha": fila.fecha,
+                "cantidad": fila.cantidad
+            }
+            for fila in resultados
+        ]
+    
+    # Facturación total por día en los últimos X días  
+    def get_facturacion_por_periodo(
+    self,
+    dias: int
+    ):
+
+        fecha_limite = datetime.datetime.now() - datetime.timedelta(days=dias)
+
+        statement = (
+            select(
+                func.date(Pedido.created_at).label("fecha"),
+                func.coalesce(
+                    func.sum(Pedido.total),
+                    0
+                ).label("total")
+            )
+            .where(Pedido.created_at >= fecha_limite)
+            .where(Pedido.deleted_at.is_(None))
+            .group_by(func.date(Pedido.created_at))
+            .order_by(func.date(Pedido.created_at))
+        )
+
+        resultados = self.session.exec(statement).all()
+
+        return [
+            {
+                "fecha": fila.fecha,
+                "total": fila.total
+            }
+            for fila in resultados
+        ]
+    
+    # facturación total
+    from sqlalchemy import func
+
+    def get_facturacion_total(self):
+
+        statement = (
+            select(
+                func.coalesce(func.sum(Pedido.total), 0)
+            )
+            .where(Pedido.deleted_at.is_(None))
+        )
+
+        return self.session.exec(statement).one()
+    
+    # cantidad total de pedidos
+    def get_cantidad_pedidos(self):
+
+        statement = (
+            select(
+                func.count(Pedido.id)
+            )
+            .where(Pedido.deleted_at.is_(None))
+        )
+
+        return self.session.exec(statement).one()

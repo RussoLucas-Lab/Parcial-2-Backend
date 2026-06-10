@@ -1,7 +1,10 @@
-from sqlmodel import Session, select
+from unittest import result
+
+from sqlmodel import Session, func, select
 
 from app.Core.repository import BaseRepository
 from app.modules.DetallePedido.model import DetallePedido
+from app.modules.Producto.model import Producto
 
 
 class DetallePedidoRepository(BaseRepository[DetallePedido]):
@@ -31,3 +34,47 @@ class DetallePedidoRepository(BaseRepository[DetallePedido]):
                 .where(DetallePedido.pedido_id == pedido_id)
             ).all()
         )
+    
+    def get_top_productos(
+    self,
+    limit: int = 10
+    ) -> list[dict[str, any]]:
+
+        statement = (
+            select(
+                Producto.nombre.label("producto"),
+                func.sum(
+                    DetallePedido.cantidad
+                ).label("cantidad")
+            )
+            .join(
+                DetallePedido,
+                Producto.id == DetallePedido.producto_id
+            )
+            .where(
+                Producto.deleted_at.is_(None)
+            )
+            .where(
+                DetallePedido.deleted_at.is_(None)
+            )
+            .group_by(
+                Producto.id,
+                Producto.nombre
+            )
+            .order_by(
+                func.sum(
+                    DetallePedido.cantidad
+                ).desc()
+            )
+            .limit(limit)
+        )
+
+        result = self.session.exec(statement).all()
+
+        return [
+            {
+                "producto": row.producto,
+                "cantidad": row.cantidad
+            }
+            for row in result
+        ]

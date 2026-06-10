@@ -103,9 +103,9 @@ class DetallePedido(SQLModel, table=True):
         nullable=False
     )
 
-    deleted_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False
+    deleted_at: Optional[datetime] = Field(
+        default=None,
+        nullable=True
     )
 
     # Relationships

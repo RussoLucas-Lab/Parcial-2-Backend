@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
+from sqlalchemy import Column, TIMESTAMP
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy.orm import relationship
 from app.Core.base import Base
@@ -40,7 +41,8 @@ class UsuarioRol(SQLModel, table=True):
     )
 
     expires_at: Optional[datetime] = Field(
-        default=None
+        default=None,
+        sa_column=Column(TIMESTAMP(timezone=True), nullable=True)
     )
 
     created_at: datetime = Field(

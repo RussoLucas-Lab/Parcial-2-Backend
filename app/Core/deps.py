@@ -90,6 +90,7 @@ def get_ws_manager():
    return ws_manager
 
 def require_role(allowed_roles: list[str]):
+    from app.modules.Usuario.schemas import UsuarioPublic
 
     async def role_checker(
         current_user: Annotated[
@@ -100,12 +101,11 @@ def require_role(allowed_roles: list[str]):
             UsuarioUnitOfWork,
             Depends(get_usuario_uow)
         ],
-    ) -> Usuario:
+    ) -> UsuarioPublic:
 
         roles = uow.usuario_roles.get_roles_by_user_id(
             current_user.id
         )
-        print(f"Roles del usuario {current_user.id}: {roles}")
 
         if not any(role in allowed_roles for role in roles):
             raise HTTPException(
@@ -116,6 +116,15 @@ def require_role(allowed_roles: list[str]):
                 ),
             )
 
-        return current_user
+        return UsuarioPublic(
+            id=current_user.id,
+            nombre=current_user.nombre,
+            apellido=current_user.apellido,
+            email=current_user.email,
+            celular=current_user.celular,
+            activo=current_user.activo,
+            roles=roles,
+            direcciones=[],
+        )
 
     return role_checker

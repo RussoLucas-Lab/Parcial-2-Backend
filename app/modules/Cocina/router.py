@@ -79,8 +79,12 @@ async def websocket_endpoint(
                 await websocket.close(code=1008, reason="Permisos insuficientes")
                 return
 
+            # Extraer dentro del bloque de sesión antes de que se cierre
+            user_id = user.id
+            primary_role = next(r for r in user_roles if r in ("COCINA", "PEDIDOS", "ADMIN"))
+
     # 4. Registrar en el ConnectionManager global
-    await manager.connect(websocket)
+    await manager.connect(websocket, primary_role, user_id)
 
     try:
         # 5. Bucle infinito: espera mensajes (detecta desconexiones)

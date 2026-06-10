@@ -372,9 +372,9 @@ async def websocket_endpoint(
         await websocket.close(code=1008, reason="Token inválido o expirado")
         return
 
-    # Extraer el "sub" (subject) del token — es el username
-    username = payload.get("sub")
-    if not username:
+    # Extraer el "sub" (subject) del token — es el user_id numérico como string
+    user_id_str = payload.get("sub")
+    if not user_id_str:
         await websocket.accept()
         await websocket.close(code=1008, reason="Token inválido")
         return
@@ -382,21 +382,9 @@ async def websocket_endpoint(
     # =========================================================================
     # PASO 3: VALIDAR USUARIO EN BASE DE DATOS
     # =========================================================================
-    # Aunque el JWT sea válido, el usuario podría:
-    #   - Haber sido eliminado de la BD
-    #   - Haber sido desactivado (disabled=True)
-    #
-    # Siempre validamos contra la BD para tener la información más reciente.
-    #
-    # NOTA: Cualquier rol autenticado puede conectarse al WebSocket.
-    # La diferenciación de roles se hace via rooms:
-    #   - role:cocina  → recibe eventos de cocina
-    #   - role:pedidos → recibe eventos de pedidos
-    #   - role:user    → solo recibe eventos de sus pedidos específicos
-    #
     with Session(engine) as db_session:
       with UsuarioUnitOfWork(db_session) as uow:
-            user = uow.usuarios.get_by_email(username)
+            user = uow.usuarios.get_by_id(int(user_id_str))
             if not user or not user.activo:
                await websocket.accept()
                await websocket.close(code=1008, reason="Usuario inválido o inactivo")

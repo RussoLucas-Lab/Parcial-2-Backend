@@ -5,7 +5,7 @@ from app.Core.base import Base
 from typing import TYPE_CHECKING, List, Optional
 from decimal import Decimal
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import Column, Integer, ForeignKey, Numeric, Text, Boolean
+from sqlalchemy import BigInteger, Column, Integer, ForeignKey, Numeric, Text, Boolean
 
 from app.modules.DetallePedido.model import DetallePedido
 
@@ -107,6 +107,11 @@ class Producto(Base, table=True):
     disponible: bool = Field(
         default=True,
         nullable=False
+    )
+
+    unidad_venta_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(BigInteger, ForeignKey("unidad_medida.id"), nullable=True)
     )
 
     #Relationships

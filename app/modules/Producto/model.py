@@ -32,6 +32,14 @@ class ProductoIngrediente(SQLModel, table = True):
             primary_key=True
         )
     )
+    unidad_medida_id: int = Field(
+        sa_column=Column(
+            BigInteger,
+            ForeignKey("unidad_medida.id"),
+            nullable=False
+        )
+    )
+
     es_removible: bool = Field(default=False, nullable=False)
 
     created_at: datetime = Field(

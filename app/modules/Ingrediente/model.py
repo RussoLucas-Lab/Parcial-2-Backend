@@ -1,6 +1,6 @@
 from sqlmodel import Field, Relationship
 from app.Core.base import Base
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, List
 from app.modules.Producto.model import ProductoIngrediente
 
 if TYPE_CHECKING:
@@ -14,7 +14,11 @@ class Ingrediente(Base, table= True):
         unique=True
     )
     
-    descripcion: Optional[str] = Field(default=None)
+    stock_cantidad: int = Field(
+        default=0,
+        nullable=False,
+        ge=0
+    )
 
     es_alergeno: bool = Field(
         default=False,

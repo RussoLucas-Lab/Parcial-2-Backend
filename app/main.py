@@ -30,6 +30,7 @@ from app.modules.HistorialPedido.model import HistorialEstadoPedido
 from app.modules.FormaPago.model import FormaPago
 from app.modules.Pagos.models import Pago
 from app.modules.Images.model import Image
+from app.modules.UnidadMedida.model import UnidadMedida
 
 
 

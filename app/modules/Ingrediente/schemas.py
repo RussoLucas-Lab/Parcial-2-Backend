@@ -7,12 +7,12 @@ from sqlmodel import SQLModel, Field
 
 class IngredienteCreate(SQLModel):
     nombre: str = Field(min_length=2, max_length=100)
-    descripcion: Optional[str]
-    es_alergeno: bool = Field(default= False)
+    stock_cantidad: int = Field(default=0, ge=0)
+    es_alergeno: bool = Field(default=False)
 
 class IngredienteUpdate(SQLModel):
     nombre: Optional[str] = Field(default=None, min_length=2, max_length=100)
-    descripcion: Optional[str] = Field(default=None, min_length=2, max_length=100)
+    stock_cantidad: Optional[int] = Field(default=None, ge=0)
     es_alergeno: Optional[bool] = None
 
 
@@ -21,7 +21,7 @@ class IngredienteUpdate(SQLModel):
 class IngredientePublic(SQLModel):
     id: int
     nombre: str
-    descripcion: str
+    stock_cantidad: int
     es_alergeno: bool
 
 class IngredienteList(SQLModel):

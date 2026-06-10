@@ -2,6 +2,28 @@ Backend API
 
 API REST desarrollada con FastAPI para la gestión de productos, categorías e ingredientes.
 
+# FoodStore v7 (Entrega Final)
+
+## Funcionalidad
+
+* Implementación de websocket para pedidos.
+* Cloudinary para carga de imagenes en Producto y Categoría.
+* MercadoPago para pagos.
+
+## Estructura
+
+* Nueva entidad 'UnidadMedida'
+* Se eliminó el estado 'LISTO' de los pedidos.
+* ProductoIngrediente ahora tiene el atributo 'unidad_medida_id' referenciando a la nueva entidad.
+* Ingrediente ahora tiene el atributo stock_cantidad.
+
+## Correcciones de parcial 2
+
+* Bcrypt ahora implementa 12 rondas
+* Frontend Admin ya no permite registrar nuevos usuarios.
+
+---
+
 ## Tecnologías
 
 * FastAPI
@@ -35,17 +57,21 @@ pip install -r requirements.txt
 
 ### 4. Variables de entorno
 
-Crear archivo `.env` en la raíz:
+Copiar el archivo de ejemplo y completar los valores:
 
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/db_name
+```bash
+cp .env.example .env        # Linux / Mac
+copy .env.example .env      # Windows
 ```
+
+Editar `.env` con los valores correspondientes al entorno local.
 
 ##Ejecución
 
 ```bash
 uvicorn app.main:app --reload
 ```
+
 ## 📄 Documentación automática
 
 Disponible en:

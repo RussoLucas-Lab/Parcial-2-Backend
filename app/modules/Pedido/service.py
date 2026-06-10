@@ -78,27 +78,25 @@ logger = logging.getLogger("app.modules.Pedido.service")
 #   estado_normalizado = ESTADOS.get(estado_db, estado_db)  # → "pendiente"
 #
 ESTADOS = {
-    # Español
-    "pendiente": "pendiente",
-    "confirmado": "confirmado",
-    "preparando": "preparando",
-    "enviado": "enviado",
-    "entregado": "entregado",
-    "cancelado": "cancelado",
+    # Valores canónicos de la BD (pass-through)
+    "PENDIENTE":  "PENDIENTE",
+    "CONFIRMADO": "CONFIRMADO",
+    "EN_PREP":    "EN_PREP",
+    "ENTREGADO":  "ENTREGADO",
+    "CANCELADO":  "CANCELADO",
+    # Español minúsculas / aliases
+    "pendiente":      "PENDIENTE",
+    "confirmado":     "CONFIRMADO",
+    "preparando":     "EN_PREP",
+    "en_preparacion": "EN_PREP",
+    "en_prep":        "EN_PREP",
+    "entregado":      "ENTREGADO",
+    "cancelado":      "CANCELADO",
     # Inglés
-    "pending": "pendiente",
-    "confirmed": "confirmado",
-    "shipped": "enviado",
-    "delivered": "entregado",
-    "cancelled": "cancelado",
-    # Abreviaturas
-    "en_prep": "preparando",
-    "en_preparacion": "preparando",
-    "en_camino": "listo",
-    "listo": "listo",
-    "ready": "listo",
-    # Backward-compat (pedidos viejos en BD con estado enviado)
-    "enviado": "listo",
+    "pending":   "PENDIENTE",
+    "confirmed": "CONFIRMADO",
+    "delivered": "ENTREGADO",
+    "cancelled": "CANCELADO",
 }
 
 
@@ -126,25 +124,24 @@ ESTADOS = {
 TRANSICIONES = {
     # Admin puede hacer CUALQUIER transición válida
     "ADMIN": {
-        "pendiente":  {"confirmado", "cancelado"},
-        "confirmado": {"preparando", "cancelado"},
-        "preparando": {"listo", "cancelado"},
-        "listo":      {"entregado", "cancelado"},
-        "entregado":  set(),   # Estado terminal — no admite transiciones
-        "cancelado":  set(),   # Estado terminal — no admite transiciones
+        "PENDIENTE":  {"CONFIRMADO", "CANCELADO"},
+        "CONFIRMADO": {"EN_PREP",    "CANCELADO"},
+        "EN_PREP":    {"ENTREGADO",      "CANCELADO"},
+        "ENTREGADO":  set(),
+        "CANCELADO":  set(),
     },
-    # Pedidos: confirma, manda a cocina y entrega cuando está listo
+    # Cajero: confirma, cancela pedidos
     "PEDIDOS": {
-        "pendiente":  {"confirmado", "cancelado"},
-        "confirmado": {"preparando", "cancelado"},
-        "preparando": set(),            # La cocina se encarga — cajero no avanza de aquí
-        "listo":      {"entregado"},    # Cajero entrega cuando cocina lo marca listo
-        "entregado":  set(),
-        "cancelado":  set(),
+        "PENDIENTE":  {"CONFIRMADO", "CANCELADO"},
+        "CONFIRMADO": {"CANCELADO"},
+        "EN_PREP":    {"CANCELADO"},
+        "ENTREGADO":  set(),
+        "CANCELADO":  set(),
     },
-    # Cocina marca el pedido como listo para que el cajero lo entregue
+    # Cocina: prepara y entrega directamente
     "COCINA": {
-        "preparando": {"listo"},        # Marcar como listo para entrega
+        "CONFIRMADO": {"EN_PREP"},
+        "EN_PREP":    {"ENTREGADO"},
     },
 }
 
@@ -159,12 +156,11 @@ TRANSICIONES = {
 # Estos eventos son los que el frontend KDS escucha en socket.onmessage.
 #
 EVENTOS_WS = {
-    "pendiente":  "NUEVO_PEDIDO",
-    "confirmado": "PEDIDO_CONFIRMADO",
-    "preparando": "PEDIDO_EN_PREPARACION",
-    "listo":      "PEDIDO_LISTO",
-    "cancelado":  "PEDIDO_CANCELADO",
-    "entregado":  "PEDIDO_ENTREGADO",
+    "PENDIENTE":  "NUEVO_PEDIDO",
+    "CONFIRMADO": "PEDIDO_CONFIRMADO",
+    "EN_PREP":    "PEDIDO_EN_PREPARACION",
+    "CANCELADO":  "PEDIDO_CANCELADO",
+    "ENTREGADO":  "PEDIDO_ENTREGADO",
 }
 
 
@@ -183,22 +179,18 @@ EVENTOS_WS = {
 #   - preparando → cocina + pedidos
 #     La cocina inició la preparación, pedidos monitorea el progreso
 #
-#   - enviado → pedidos
-#     El pedido salió a delivery, solo pedidos necesita saber
-#
-#   - entregado → pedidos
-#     El pedido llegó al cliente, solo pedidos necesita saber
+#   - entregado → pedidos + cocina
+#     La cocina entregó el pedido directamente
 #
 #   - cancelado → pedidos + cocina
 #     Todos los involucrados deben saber que se canceló
 #
 ROLES_POR_TRANSICION = {
-    "pendiente":  ["pedidos", "admin"],
-    "confirmado": ["pedidos", "cocina", "admin"],
-    "preparando": ["cocina", "pedidos", "admin"],
-    "listo":      ["pedidos", "admin"],   # Cajero recibe aviso para entregar
-    "entregado":  ["pedidos", "admin"],
-    "cancelado":  ["pedidos", "cocina", "admin"],
+    "PENDIENTE":  ["pedidos", "admin"],
+    "CONFIRMADO": ["pedidos", "cocina", "admin"],
+    "EN_PREP":    ["cocina", "pedidos", "admin"],
+    "ENTREGADO":  ["pedidos", "cocina", "admin"],
+    "CANCELADO":  ["pedidos", "cocina", "admin"],
 }
 
 
@@ -342,7 +334,7 @@ class PedidoService:
             )
 
         # Notificar al cajero que llegó un pedido nuevo
-        await self._emit_ws_events(result.id, "pendiente", result)
+        await self._emit_ws_events(result.id, "PENDIENTE", result)
         return result
 
     def list_cocina_pedidos(self) -> list[PedidoPublic]:
@@ -360,7 +352,7 @@ class PedidoService:
             all_pedidos = uow.pedidos.get_all()
             cocina_pedidos = [
                 p for p in all_pedidos
-                if p.estado_codigo in ("preparando", "EN_PREP", "en_preparacion")
+                if p.estado_codigo in ("CONFIRMADO", "EN_PREP")
             ]
             cocina_pedidos.sort(key=lambda p: p.id or 0)
             result = [PedidoPublic.model_validate(p) for p in cocina_pedidos]
@@ -491,7 +483,8 @@ class PedidoService:
             return
 
         # Serializar el pedido a diccionario para enviar como JSON
-        data = result.model_dump()
+        # mode="json" convierte Decimal → float para que sea JSON-serializable
+        data = result.model_dump(mode="json")
 
         # ─── NOTIFICAR AL CLIENTE (room del pedido) ──────────────────────────
         # El cliente que hizo el pedido siempre recibe la actualización,

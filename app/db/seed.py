@@ -106,12 +106,6 @@ ESTADOS_PEDIDO = [
       es_terminal=False
    ),
    EstadoPedido(
-      codigo="LISTO",
-      descripcion="Pedido listo para entregar",
-      orden=4,
-      es_terminal=False
-   ),
-   EstadoPedido(
       codigo="ENTREGADO",
       descripcion="Pedido entregado",
       orden=5,

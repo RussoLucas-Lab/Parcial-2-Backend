@@ -57,11 +57,14 @@ pip install -r requirements.txt
 
 ### 4. Variables de entorno
 
-Crear archivo `.env` en la raíz:
+Copiar el archivo de ejemplo y completar los valores:
 
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/db_name
+```bash
+cp .env.example .env        # Linux / Mac
+copy .env.example .env      # Windows
 ```
+
+Editar `.env` con los valores correspondientes al entorno local.
 
 ##Ejecución
 

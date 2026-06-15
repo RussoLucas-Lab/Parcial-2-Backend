@@ -22,6 +22,9 @@ API REST desarrollada con FastAPI para la gestión de productos, categorías e i
 * Bcrypt ahora implementa 12 rondas
 * Frontend Admin ya no permite registrar nuevos usuarios.
 
+## Link del video: Introducción + Backend
+* https://drive.google.com/file/d/1jbq4sPDH1KS7uvkxQdYhZ4NZ11VGDO_0/view?usp=sharing
+
 ---
 
 ## Tecnologías

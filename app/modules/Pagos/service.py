@@ -64,7 +64,7 @@ class PaymentService:
         self._session = session
 
     # ╔════════════════════════════════════════════════════════════════════╗
-    # ║  MÉTODOS PRIVADOS: COMUNICACIÓN CON EL SDK DE MERCADOPAGO        ║
+    # ║  MÉTODOS PRIVADOS: COMUNICACIÓN CON EL SDK DE MERCADOPAGO          ║
     # ╚════════════════════════════════════════════════════════════════════╝
 
     def _get_mp_access_token(self) -> Optional[str]:
@@ -233,7 +233,7 @@ class PaymentService:
             raise RuntimeError(f"Error de conexión con MP: {str(e)}")
 
     # ╔════════════════════════════════════════════════════════════════════╗
-    # ║  OPERACIONES DE NEGOCIO                                          ║
+    # ║  OPERACIONES DE NEGOCIO                                            ║
     # ╚════════════════════════════════════════════════════════════════════╝
 
     def crear_pago(self, pedido_id: int) -> PagoCrearResponse:

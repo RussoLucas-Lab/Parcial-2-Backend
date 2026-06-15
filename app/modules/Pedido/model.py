@@ -6,6 +6,7 @@ from sqlalchemy import (
     CheckConstraint,
     Column,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text
@@ -41,7 +42,7 @@ class Pedido(Base, table=True):
 
     id: int = Field(
         sa_column=Column(
-            BigInteger,
+            BigInteger().with_variant(Integer(), "sqlite"),
             primary_key=True,
             autoincrement=True
         )

@@ -94,6 +94,7 @@ class UsuarioService:
                 apellido=usuario.apellido,
                 email=usuario.email,
                 celular=usuario.celular,
+                activo=usuario.activo,
                 roles=["CLIENT"],
             )
 

@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import BigInteger, Column, String
+from sqlalchemy import BigInteger, Column, Integer, String
 from sqlmodel import Field, SQLModel
 
 
@@ -8,7 +8,7 @@ class UnidadMedida(SQLModel, table=True):
 
     id: Optional[int] = Field(
         default=None,
-        sa_column=Column(BigInteger, primary_key=True, autoincrement=True)
+        sa_column=Column(BigInteger().with_variant(Integer(), "sqlite"), primary_key=True, autoincrement=True)
     )
 
     nombre: str = Field(

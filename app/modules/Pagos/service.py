@@ -373,8 +373,7 @@ class PaymentService:
 
         # El ID que usaremos para consultar a MP
         pago_mp_id = data_id
-        #TODO BORRAR DESPUÉS DE TESTEAR
-        print( pago_mp_id)
+
 
         # ── Validaciones ─────────────────────────────────────────────────
         if not pago_mp_id:
@@ -390,9 +389,7 @@ class PaymentService:
         try:
             # PASO 1: Consultar el estado real del pago a MP
             mp_info = self._consultar_pago_mp(int(pago_mp_id))
-            
-            #TODO BORRAR DESPUÉS DE TESTEAR
-            print("MP info:", mp_info)
+        
 
             estado_mp = mp_info.get("mp_status")
             print("Estado MP:", estado_mp)
@@ -424,7 +421,6 @@ class PaymentService:
 
             # PASO 3: Buscar el pago en nuestra BD
             with PagoUnitOfWork(self._session) as uow:
-                print("entro al with")    
                 # Primero intentamos por mp_payment_id (el caso más común)
                 pago = uow.pagos.get_by_mp_payment_id(int(pago_mp_id))
 
@@ -568,13 +564,7 @@ class PaymentService:
                     pago.updated_at = datetime.utcnow()
                     uow.pagos.update(pago)
 
-                    #TODO el pedido lo confirma el Cajero, lo que se aprueba es el pago
-                    # Si se aprobó, actualizamos el pedido
-                    #if nuevo_estado == "aprobado":
-                    #    pedido.estado_codigo = "CONFIRMADO"
-                    #    pedido.updated_at = datetime.utcnow()
-                    #    self._session.add(pedido)
-
+                
             return PagoEstadoResponse(estado=nuevo_estado, pedido_id=pedido_id)
 
         # ── Sin payment_id que consultar ─────────────────────────────────

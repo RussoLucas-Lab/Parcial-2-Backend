@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
+from app.Core.config import settings
 from app.Core.database import get_session
 from app.modules.Auth.schemas import LoginRequest, RefreshRequest, SessionResponse
 from app.modules.Auth.service import AuthService
@@ -21,8 +22,8 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str,
         value=access_token,
         max_age=expires_in,
         httponly=True,
-        samesite="none",
-        secure=True,
+        samesite="none" if settings.COOKIE_SECURE else "lax",
+        secure=settings.COOKIE_SECURE,
     )
 
     response.set_cookie(
@@ -31,8 +32,8 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str,
         max_age=60 * 60 * 24 * 7,
         path="/api/v1/auth/refresh",
         httponly=True,
-        samesite="none",
-        secure=True,
+        samesite="none" if settings.COOKIE_SECURE else "lax",
+        secure=settings.COOKIE_SECURE,
     )
 
 

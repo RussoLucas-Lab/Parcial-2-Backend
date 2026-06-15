@@ -4,6 +4,7 @@ from sqlalchemy import (
     BigInteger,
     Column,
     ForeignKey,
+    Integer,
     String
 )
 
@@ -27,7 +28,7 @@ class HistorialEstadoPedido(Base, table=True):
 
     id: int = Field(
         sa_column=Column(
-            BigInteger,
+            BigInteger().with_variant(Integer(), "sqlite"),
             primary_key=True,
             autoincrement=True
         )

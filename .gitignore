@@ -4,6 +4,7 @@
 # Cache Python
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Archivos de VSCode
 .vscode/

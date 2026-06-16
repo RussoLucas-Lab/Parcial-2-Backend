@@ -6,7 +6,7 @@
     # permitir cambiar entornos fácilmente (dev, test, producción)
 # ──────────────────────────────────────────────────────────────────────────────
 
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import computed_field
 
@@ -66,6 +66,46 @@ class Settings(BaseSettings):
     VITE_FRONTEND_URL:  str = "http://localhost:5173"
     VITE_API_URL:       str = "https://unmelodramatically-paragonitic-marcel.ngrok-free.dev"
     
+    # ─── Logging ────────────────────────────────────────────────────────────────
+    LOG_LEVEL: Literal[
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+    ] = "INFO"
+
+    # ─── Rate Limiting ──────────────────────────────────────────────────────────
+    RATE_LIMIT_DEFAULT_PER_MINUTE: int = 60
+    RATE_LIMIT_DEFAULT_BURST: int = 10
+
+    RATE_LIMIT_AUTH_PER_MINUTE: int = 5
+    RATE_LIMIT_AUTH_BURST: int = 3
+
+    # Alias en minúscula (por si algún middleware los usa)
+    @computed_field
+    @property
+    def rate_limit_default_per_minute(self) -> int:
+        return self.RATE_LIMIT_DEFAULT_PER_MINUTE
+
+    @computed_field
+    @property
+    def rate_limit_default_burst(self) -> int:
+        return self.RATE_LIMIT_DEFAULT_BURST
+
+    @computed_field
+    @property
+    def rate_limit_auth_per_minute(self) -> int:
+        return self.RATE_LIMIT_AUTH_PER_MINUTE
+
+    @computed_field
+    @property
+    def rate_limit_auth_burst(self) -> int:
+        return self.RATE_LIMIT_AUTH_BURST
+
+
+
+
     # --- Cloudinary ---
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""

@@ -2,14 +2,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqlmodel import SQLModel, Session
-
+from app.Core.config import settings
 from app.Core.database import engine
 
+from app.Core.exceptions.exception_handlers import register_exception_handlers
+from app.Core.logger import get_logger, setup_logging
 
 # =========================================
 # IMPORTS DE TODOS LOS MODELOS
 # =========================================
 
+from app.Core.middleware.logging_middleware import LoggingMiddleware
+from app.Core.middleware.timing_middleware import TimingMiddleware
+from app.Core.rate_limit.rate_limit_middleware import RateLimitMiddleware
 from app.modules.Categoria.model import Categoria
 from app.modules.Ingrediente.model import Ingrediente
 
@@ -50,6 +55,13 @@ from app.modules.Images.router import router as images_router
 from app.modules.Estadisticas.router import router as estadisticas_router
 
 # =========================================
+# LOGGER 
+# =========================================
+setup_logging(settings.LOG_LEVEL)
+logger = get_logger(__name__)
+
+
+# =========================================
 # SEEDS
 # =========================================
 
@@ -67,8 +79,13 @@ app = FastAPI(
 
 
 # =========================================
-# CORS
+# CORS & MIDDLEWARES 
 # =========================================
+
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(TimingMiddleware)
+
 
 app.add_middleware(
    CORSMiddleware,
@@ -93,6 +110,14 @@ def on_startup():
       seed_estados_pedido(session)
       seed_formas_pago(session)
       seed_usuarios(session)
+
+
+# =========================================
+# EXCEPTION HANDLERS 
+# =========================================
+
+register_exception_handlers(app)
+
 
 # =========================================
 # ROUTERS
